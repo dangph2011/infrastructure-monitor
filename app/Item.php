@@ -9,10 +9,11 @@ class Item extends Model
     //
     public function host()
     {
-        return $this->belongsTo(Host::class);
+        return $this->belongsTo(Host::class, 'hostid', 'hostid');
     }
-    public function graphItems()
+
+    public function graphsItems()
     {
-        return $this->hasMany(GraphsItem::class);
+        return $this->hasMany(GraphsItem::class, 'itemid', 'itemid');
     }
 }

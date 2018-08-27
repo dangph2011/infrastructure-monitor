@@ -10,11 +10,11 @@ class GraphsItem extends Model
 
     public function item()
     {
-        return $this->belongsTo(Item::class);
+        return $this->belongsTo(Item::class, 'itemid', 'itemid');
     }
 
     public function graph()
     {
-        return $this->belongsTo(Graph::class);
+        return $this->belongsTo(Graph::class, 'graphid', 'graphid');
     }
 }

@@ -11,6 +11,11 @@ class Host extends Model
 
     public function hostGroups()
     {
-        return $this->hasMany(HostsGroup::class);
+        return $this->hasMany(HostsGroup::class, 'hostid', 'hostid');
+    }
+
+    public function items()
+    {
+        return $this->hasMany(Item::class, 'hostid', 'hostid');
     }
 }

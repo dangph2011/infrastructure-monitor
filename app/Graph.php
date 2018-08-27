@@ -7,8 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 class Graph extends Model
 {
     //
-    public function graphItems()
+    public function graphsItems()
     {
-        return $this->hasMany(GraphItem::class);
+        return $this->hasMany(GraphsItem::class, 'graphid', 'graphid');
     }
 }
