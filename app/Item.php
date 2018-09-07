@@ -17,4 +17,9 @@ class Item extends Model
     {
         return $this->hasMany(GraphsItem::class, 'itemid', 'itemid');
     }
+
+    public function graphs()
+    {
+        return $this->belongsToMany(Graph::class, 'graphs_items', 'itemid', 'graphid');
+    }
 }

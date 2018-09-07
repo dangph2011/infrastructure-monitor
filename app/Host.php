@@ -19,4 +19,9 @@ class Host extends Model
     {
         return $this->hasMany(Item::class, 'hostid', 'hostid');
     }
+
+    public function groups()
+    {
+        return $this->belongsToMany(Group::class, 'hosts_groups', 'hostid', 'groupid');
+    }
 }
