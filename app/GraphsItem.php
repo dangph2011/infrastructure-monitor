@@ -6,8 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class GraphsItem extends Model
 {
-    //
+    protected $primaryKey = 'gitemid';
 
+    //
     public function item()
     {
         return $this->belongsTo(Item::class, 'itemid', 'itemid');

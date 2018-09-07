@@ -8,6 +8,7 @@ class Group extends Model
 {
     //
     // protected $table = 'groups';
+    protected $primaryKey = 'groupid';
 
     public function hostsGroups()
     {

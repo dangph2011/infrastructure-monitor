@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Item extends Model
 {
     //
+    protected $primaryKey = 'itemid';
     public function host()
     {
         return $this->belongsTo(Host::class, 'hostid', 'hostid');
