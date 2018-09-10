@@ -2,20 +2,75 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-
 use App\Graph;
-use App\Item;
 use App\Group;
-use App\GraphsItem;
+use App\Host;
+use Illuminate\Http\Request;
 
 class GraphController extends Controller
 {
     //
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+
     public function view()
     {
-        // $graph = Graph::where('flags',0)->orWhere('flags',4)->get();
-        // print_r($graph);
-        // return view('graphs.view');
+        $hosts = collect();
+        $groupid = collect();
+        $hostid = collect();
+        $groups = Group::whereHas('hosts', function ($query) {
+            $query->whereIN('status', [0, 4])
+                ->whereHas('items', function ($query) {
+                    $query->whereHas('graphs', function ($query) {
+                        $query->whereIN('flags', [0, 4]);
+                    });
+                });
+        })->get();
+
+        //Get groupId request
+        $rq_groupid = request('groupid', 0);
+        $rq_hostid = request('hostid', 0);
+
+        if ($rq_groupid == 0) {
+            $groups->each(function ($group) use ($groupid) {
+                $groupid->push($group->groupid);
+            });
+        } else {
+            $groupid->push($rq_groupid);
+        }
+
+        //get hosts based on selected group
+        $hosts = Host::whereIn('status', [0, 4])->WhereIn('flags', [0, 1])
+            ->whereHas('groups', function ($query) use ($groupid) {
+                $query->whereIn('groups.groupid', $groupid);
+            })
+            ->whereHas('items', function ($query) {
+                $query->whereHas('graphs', function ($query) {
+                    $query->whereIN('flags', [0, 4]);
+                });
+            })->get();
+
+        if ($rq_hostid == 0) {
+            $hosts->each(function ($host) use ($hostid) {
+                $hostid->push($host->hostid);
+            });
+        } else {
+            $hostid->push($rq_hostid);
+        }
+
+        //get graphs based on selected group and host
+        $graphs = Graph::whereIn('flags', [0, 4])
+            ->whereHas('items', function ($query) use ($hostid, $groupid) {
+                $query->whereHas('host', function ($query) use ($hostid, $groupid) {
+                    $query->where('status', '<>', 3)->whereIn('hosts.hostid', $hostid)
+                        ->whereHas('groups', function($query) use ($groupid) {
+                            $query->whereIn('groups.groupid', $groupid);
+                        });
+                });
+            })->orderBy('name')->get();
+
+        return view('graphs.view', compact('groups', 'hosts', 'rq_groupid', 'graphs', 'rq_hostid'));
     }
 }

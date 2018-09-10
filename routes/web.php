@@ -22,3 +22,7 @@ Route::get('/graph', 'GraphController@view');
 Auth::routes();
 
 Route::get('/home', 'HomeController@index')->name('home');
+
+Route::get('/graph', 'GraphController@view');
+
+Route::post('/graph', 'GraphController@view');
