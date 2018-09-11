@@ -2,7 +2,12 @@
 @section('page-header') Graph Page
 @endsection
 
+@section('scripts')
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js"></script>
+@endsection
+
 @section('contents')
+
 <div class="container-fluid">
     <div class="row">
         <form method="GET" action="/graph">
@@ -44,12 +49,20 @@
                     <select class="form-control" name="graphid" id="" onchange="this.form.submit()">
                     <option value=0>Tất cả</option>
                     @foreach($graphs as $graph)
-                        <option value="{{ $graph->graphid }}"> {{ $graph->name }}</option>
+                        @if ($graph->graphid == $rq_graphid)
+                            <option value="{{ $graph->graphid }}" selected> {{ $graph->name }}</option>
+                        @else
+                            <option value="{{ $graph->graphid }}"> {{ $graph->name }}</option>
+                        @endif
                     @endforeach
                 </select>
                 </div>
             </div>
         </form>
     </div>
+
+    <canvas id="myChart" width="400" height="400"></canvas>
+    <script src="js/chart.js"></script>
+
 </div>
 @endsection

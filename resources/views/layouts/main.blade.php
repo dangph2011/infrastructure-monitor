@@ -23,6 +23,10 @@ scratch. This page gets rid of all links and provides the needed markup only.
         apply the skin class to the body tag so the changes take effect. -->
     <link rel="stylesheet" href="bower_components/admin-lte/dist/css/skins/skin-blue.min.css">
 
+    @yield('scripts')
+
+    @yield('csss')
+
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
     <!--[if lt IE 9]>
@@ -58,9 +62,9 @@ desired effect
     <div class="wrapper">
 
         <!-- Main Header -->
-        @include('layouts.header')
+    @include('layouts.header')
         <!-- Left side column. contains the logo and sidebar -->
-        @include('layouts.mainside')
+    @include('layouts.mainside')
 
         <!-- Content Wrapper. Contains page content -->
         <div class="content-wrapper">
@@ -87,14 +91,16 @@ desired effect
         <!-- /.content-wrapper -->
 
         <!-- Main Footer -->
-        @include('layouts.footer')
+    @include('layouts.footer')
 
         <!-- Control Sidebar -->
-        {{-- @include('layouts.sidebar_control') --}}
+        {{--
+    @include('layouts.sidebar_control') --}}
         <!-- /.control-sidebar -->
         <!-- Add the sidebar's background. This div must be placed
   immediately after the control sidebar -->
-        {{-- <div class="control-sidebar-bg"></div> --}}
+        {{--
+        <div class="control-sidebar-bg"></div> --}}
     </div>
     <!-- ./wrapper -->
 
@@ -105,6 +111,8 @@ desired effect
     <!-- Bootstrap 3.3.7 -->
     <script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
     <!-- AdminLTE App -->
+    <script src="bower_components/admin-lte/dist/js/adminlte.min.js"></script>
+
     <script src="bower_components/admin-lte/dist/js/adminlte.min.js"></script>
 
     <!-- Optionally, you can add Slimscroll and FastClick plugins.
