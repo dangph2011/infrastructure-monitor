@@ -66,20 +66,9 @@
     <div id="tester" class="container-fluid"></div>
 
     <script>
-        var data = {!!$tracer!!};
+        var data = {!!$tracers!!};
 
-        var layout = {
-            xaxis: {
-                type: 'date',
-                title: 'January Weather'
-            },
-            yaxis: {
-                title: 'Daily Mean Temperature'
-            },
-            title:'2000 Toronto January Weather',
-            // width: 0.9 * window.innerWidth,
-            // height: 0.9 * window.innerHeight
-        };
+        var layout = {!!$layout!!}
         var myDiv = document.getElementById('tester')
         Plotly.newPlot(myDiv, data, layout);
         // window.onresize = function() {

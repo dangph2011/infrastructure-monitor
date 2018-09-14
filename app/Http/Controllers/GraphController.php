@@ -83,9 +83,9 @@ class GraphController extends Controller
         })->get();
 
         $data = collect();
-        $tracer = collect();
+        $tracers = collect();
 
-        $items->each(function ($item) use ($tracer) {
+        $items->each(function ($item) use ($tracers) {
             //get data
             $clock_value = History::getClockAndValueData($item->itemid);
             //get delay time to handle gaps data
@@ -103,10 +103,17 @@ class GraphController extends Controller
                 $timestamp = $clock_value[0][$key];
             }
 
-            $tracer->push($this->createTraceLine($clock_value[0], $clock_value[1], "line", $item->name, false, 1));
+            $tracers->push($this->createTraceLine($clock_value[0], $clock_value[1], "line", $item->name, false, 1.5));
         });
-        // return $tracer[0]["y"];
-        return view('graphs.view', compact('groups', 'hosts', 'rq_groupid', 'graphs', 'rq_hostid', 'tracer', 'rq_graphid'));
+
+        $layout = $this->createLayoutLine(
+            $this->createAxisLayout('date', 'Date'),
+            $this->createAxisLayout(null,'Value'),
+            'Line Graph'
+        );
+
+        // return $layout;
+        return view('graphs.view', compact('groups', 'hosts', 'rq_groupid', 'graphs', 'rq_hostid', 'tracers', 'layout', 'rq_graphid'));
     }
 
     public function createTraceLine($x_data, $y_data, $mode, $name=null, $connectgaps=true, $size = null)
@@ -119,6 +126,23 @@ class GraphController extends Controller
             "connectgaps" => $connectgaps,
             "line" => ["width" => $size],
             // "type" => 'scatter',
+        ]);
+    }
+
+    public function createAxisLayout($type = null, $title = null)
+    {
+        return collect([
+            "type" => $type,
+            "title" => $title,
+        ]);
+    }
+
+    public function createLayoutLine($xaxis = null, $yaxis = null, $title = null)
+    {
+        return collect([
+            "title" => $title,
+            "xaxis" => $xaxis,
+            "yaxis" => $yaxis,
         ]);
     }
 }
