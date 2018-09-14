@@ -3,7 +3,9 @@
 @endsection
 
 @section('scripts')
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js"></script>
+{{-- <script src="/bower_components/moment/moment.js"></script> --}}
+{{-- <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js"></script> --}}
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 @endsection
 
 @section('contents')
@@ -61,8 +63,31 @@
         </form>
     </div>
 
-    <canvas id="myChart" width="400" height="400"></canvas>
-    <script src="js/chart.js"></script>
+    <div id="tester" class="container-fluid"></div>
 
+    <script>
+        var data = {!!$tracer!!};
+
+        var layout = {
+            xaxis: {
+                type: 'date',
+                title: 'January Weather'
+            },
+            yaxis: {
+                title: 'Daily Mean Temperature'
+            },
+            title:'2000 Toronto January Weather',
+            // width: 0.9 * window.innerWidth,
+            // height: 0.9 * window.innerHeight
+        };
+        var myDiv = document.getElementById('tester')
+        Plotly.newPlot(myDiv, data, layout);
+        // window.onresize = function() {
+        // Plotly.relayout(myDiv, {
+        //     width: 0.9 * window.innerWidth,
+        //     height: 0.9 * window.innerHeight
+        // })
+        // }
+    </script>
 </div>
 @endsection

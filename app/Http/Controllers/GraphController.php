@@ -7,6 +7,8 @@ use App\Group;
 use App\Host;
 use App\Item;
 use Illuminate\Http\Request;
+use App\History;
+use App\Trend;
 
 class GraphController extends Controller
 {
@@ -80,7 +82,43 @@ class GraphController extends Controller
             $query->where('graphs.graphid', $rq_graphid);
         })->get();
 
-        // print_r($items->toJson());
-        return view('graphs.view', compact('groups', 'hosts', 'rq_groupid', 'graphs', 'rq_hostid', 'items', 'rq_graphid'));
+        $data = collect();
+        $tracer = collect();
+
+        $items->each(function ($item) use ($tracer) {
+            //get data
+            $clock_value = History::getClockAndValueData($item->itemid);
+            //get delay time to handle gaps data
+            $delay_time = Item::convertToTimestamp($item->delay);
+            $timestamp = 0;
+            //add null to missing data
+            foreach ($clock_value[0] as $key => $clock) {
+                if ($key != 0) {
+                    if ($clock_value[0][$key] - $timestamp > (2*$delay_time)) {
+                        $clock_value[0]->splice($key, 0, $timestamp + $delay_time);
+                        $clock_value[1]->splice($key, 0, "null");
+                        $key++;
+                    }
+                }
+                $timestamp = $clock_value[0][$key];
+            }
+
+            $tracer->push($this->createTraceLine($clock_value[0], $clock_value[1], "line", $item->name, false, 1));
+        });
+        // return $tracer[0]["y"];
+        return view('graphs.view', compact('groups', 'hosts', 'rq_groupid', 'graphs', 'rq_hostid', 'tracer', 'rq_graphid'));
+    }
+
+    public function createTraceLine($x_data, $y_data, $mode, $name=null, $connectgaps=true, $size = null)
+    {
+        return collect([
+            "x"=>$x_data,
+            "y"=>$y_data,
+            "mode" => $mode,
+            "name" => $name,
+            "connectgaps" => $connectgaps,
+            "line" => ["width" => $size],
+            // "type" => 'scatter',
+        ]);
     }
 }
