@@ -10,7 +10,6 @@ use App\History;
 use App\Trend;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-require app_path().'/Constants/constants.php';
 
 class GraphController extends Controller
 {
@@ -109,13 +108,15 @@ class GraphController extends Controller
             $graph = Graph::find($rq_graphid);
             if ($graph->graphtype == GRAPH_TYPE_NORMAL) {
                 //Draw line graph
-                $data->push($this->createDataLine($clock_value[0], $clock_value[1], "line", $item->name, false, 1.5));
+                $data->push(createDataLine($clock_value[0], $clock_value[1], "line", $item->name, false, 1.5));
                 $rangeslider = collect();
-                $layout = $this->createLayoutLine(
-                    $this->createXAxisLayoutLine('date', 'Date', true, $rangeslider),
-                    $this->createYAxisLayoutLine(null,'Value', true),
+                $rangeselector = collect(['buttons' => getSelectorOption(['1m','3m', '6m', 'ytd', '1y'])]);
+                $layout = createLayoutLine(
+                    createXAxisLayoutLine('date', 'Date', true, $rangeselector, $rangeslider),
+                    createYAxisLayoutLine(null,'Value', true),
                     'Line Graph'
                 );
+
             } elseif ($graph->graphtype == GRAPH_TYPE_STACKED) {
                 //Draw stacked (area chart)
                 //calculate average of data
@@ -132,56 +133,7 @@ class GraphController extends Controller
         return view('graphs.view', compact('groups', 'hosts', 'rq_groupid', 'graphs', 'rq_hostid', 'data', 'layout', 'rq_graphid'));
     }
 
-    public function createDataLine($x_data, $y_data, $mode, $name=null, $connectgaps=true, $size = null)
-    {
-        return collect([
-            "x"=>$x_data,
-            "y"=>$y_data,
-            "mode" => $mode,
-            "name" => $name,
-            "connectgaps" => $connectgaps,
-            "line" => ["width" => $size],
-            // "type" => 'scatter',
-        ]);
-    }
 
-    public function createXAxisLayoutLine($type = null, $title = null, $autorange = true, $rangeslider=null)
-    {
-        return collect([
-            "autorange" => $autorange,
-            "type" => $type,
-            "title" => $title,
-            "rangeslider" => $rangeslider,
-        ]);
-    }
-
-    public function createYAxisLayoutLine($type = null, $title = null, $autorange = true)
-    {
-        return collect([
-            "autorange" => $autorange,
-            "type" => $type,
-            "title" => $title,
-        ]);
-    }
-
-
-    public function createLayoutLine($xaxis = null, $yaxis = null, $title = null)
-    {
-        return collect([
-            "title" => $title,
-            "xaxis" => $xaxis,
-            "yaxis" => $yaxis,
-        ]);
-    }
-
-    public function createDataPie($x_data, $y_data, $mode, $name=null, $connectgaps=true, $size = null)
-    {
-        return collect([
-            "values"=>$x_data,
-            "lables"=>$y_data,
-            "type" => 'pie',
-        ]);
-    }
 
     // max clock 2147483647 03:14:07 UTC on 19 January 2038 like Y2K
     public function getClockAndValueNumericData($itemid, $data_type, $min_clock = 0, $max_clock=2147483647)
@@ -201,6 +153,4 @@ class GraphController extends Controller
         });
         return collect([$x_data, $y_data]);
     }
-
-
 }

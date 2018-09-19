@@ -26,6 +26,57 @@ function createSelectorOption($step, $stepMode, $count, $lable)
         "step" => $step,
         "stepmode" => $stepMode,
         "count" => $count,
-        "lable" => $lable,
+        "label" => $lable,
+    ]);
+}
+
+function createDataLine($x_data, $y_data, $mode, $name=null, $connectgaps=true, $size = null)
+{
+    return collect([
+        "x"=>$x_data,
+        "y"=>$y_data,
+        "mode" => $mode,
+        "name" => $name,
+        "connectgaps" => $connectgaps,
+        "line" => ["width" => $size],
+        // "type" => 'scatter',
+    ]);
+}
+
+function createXAxisLayoutLine($type = null, $title = null, $autorange = true, $rangeselector=null, $rangeslider=null)
+{
+    return collect([
+        "autorange" => $autorange,
+        "type" => $type,
+        "title" => $title,
+        "rangeslider" => $rangeslider,
+        "rangeselector" => $rangeselector,
+    ]);
+}
+
+function createYAxisLayoutLine($type = null, $title = null, $autorange = true)
+{
+    return collect([
+        "autorange" => $autorange,
+        "type" => $type,
+        "title" => $title,
+    ]);
+}
+
+function createLayoutLine($xaxis = null, $yaxis = null, $title = null)
+{
+    return collect([
+        "title" => $title,
+        "xaxis" => $xaxis,
+        "yaxis" => $yaxis,
+    ]);
+}
+
+function createDataPie($x_data, $y_data, $mode, $name=null, $connectgaps=true, $size = null)
+{
+    return collect([
+        "values"=>$x_data,
+        "lables"=>$y_data,
+        "type" => 'pie',
     ]);
 }
