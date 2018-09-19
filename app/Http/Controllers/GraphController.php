@@ -110,10 +110,10 @@ class GraphController extends Controller
             if ($graph->graphtype == GRAPH_TYPE_NORMAL) {
                 //Draw line graph
                 $data->push($this->createDataLine($clock_value[0], $clock_value[1], "line", $item->name, false, 1.5));
-
+                $rangeslider = collect();
                 $layout = $this->createLayoutLine(
-                    $this->createAxisLayoutLine('date', 'Date'),
-                    $this->createAxisLayoutLine(null,'Value'),
+                    $this->createXAxisLayoutLine('date', 'Date', true, $rangeslider),
+                    $this->createYAxisLayoutLine(null,'Value', true),
                     'Line Graph'
                 );
             } elseif ($graph->graphtype == GRAPH_TYPE_STACKED) {
@@ -145,13 +145,25 @@ class GraphController extends Controller
         ]);
     }
 
-    public function createAxisLayoutLine($type = null, $title = null)
+    public function createXAxisLayoutLine($type = null, $title = null, $autorange = true, $rangeslider=null)
     {
         return collect([
+            "autorange" => $autorange,
+            "type" => $type,
+            "title" => $title,
+            "rangeslider" => $rangeslider,
+        ]);
+    }
+
+    public function createYAxisLayoutLine($type = null, $title = null, $autorange = true)
+    {
+        return collect([
+            "autorange" => $autorange,
             "type" => $type,
             "title" => $title,
         ]);
     }
+
 
     public function createLayoutLine($xaxis = null, $yaxis = null, $title = null)
     {
