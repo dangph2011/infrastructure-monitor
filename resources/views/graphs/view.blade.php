@@ -63,12 +63,12 @@
         </form>
     </div>
 
-    <div id="tester" class="container-fluid"></div>
+    <div id="plotid" class="container-fluid"></div>
 
     <script>
         var data = {!!$data!!};
         var layout = {!!$layout!!}
-        var myDiv = document.getElementById('tester')
+        var myDiv = document.getElementById('plotid')
         Plotly.newPlot(myDiv, data, layout);
     </script>
 </div>
