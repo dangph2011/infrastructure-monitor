@@ -66,17 +66,10 @@
     <div id="tester" class="container-fluid"></div>
 
     <script>
-        var data = {!!$tracers!!};
-
+        var data = {!!$data!!};
         var layout = {!!$layout!!}
         var myDiv = document.getElementById('tester')
         Plotly.newPlot(myDiv, data, layout);
-        // window.onresize = function() {
-        // Plotly.relayout(myDiv, {
-        //     width: 0.9 * window.innerWidth,
-        //     height: 0.9 * window.innerHeight
-        // })
-        // }
     </script>
 </div>
 @endsection

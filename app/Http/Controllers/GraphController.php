@@ -6,9 +6,11 @@ use App\Graph;
 use App\Group;
 use App\Host;
 use App\Item;
-use Illuminate\Http\Request;
 use App\History;
 use App\Trend;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+require app_path().'/Constants/constants.php';
 
 class GraphController extends Controller
 {
@@ -83,11 +85,11 @@ class GraphController extends Controller
         })->get();
 
         $data = collect();
-        $tracers = collect();
+        $layout = collect();
 
-        $items->each(function ($item) use ($tracers) {
+        $items->each(function ($item) use ($data, $rq_graphid) {
             //get data
-            $clock_value = History::getClockAndValueData($item->itemid);
+            $clock_value = $this->getClockAndValueNumericData($item->itemid, $item->value_type);
             //get delay time to handle gaps data
             $delay_time = Item::convertToTimestamp($item->delay);
             $timestamp = 0;
@@ -97,26 +99,43 @@ class GraphController extends Controller
                     if ($clock_value[0][$key] - $timestamp > (2*$delay_time)) {
                         $clock_value[0]->splice($key, 0, $timestamp + $delay_time);
                         $clock_value[1]->splice($key, 0, "null");
-                        $key++;
+                        // $key++;
                     }
                 }
                 $timestamp = $clock_value[0][$key];
             }
 
-            $tracers->push($this->createTraceLine($clock_value[0], $clock_value[1], "line", $item->name, false, 1.5));
+            //Draw graph based on graph type
+            $graph = Graph::find($rq_graphid);
+            if ($graph->graphtype == GRAPH_TYPE_NORMAL) {
+                //Draw line graph
+                $data->push($this->createDataLine($clock_value[0], $clock_value[1], "line", $item->name, false, 1.5));
+
+                $layout = $this->createLayoutLine(
+                    $this->createAxisLayoutLine('date', 'Date'),
+                    $this->createAxisLayoutLine(null,'Value'),
+                    'Line Graph'
+                );
+            } elseif ($graph->graphtype == GRAPH_TYPE_STACKED) {
+                //Draw stacked (area chart)
+                //calculate average of data
+            } elseif ($graph->graphtype == GRAPH_TYPE_PIE) {
+                //Draw pie graph
+
+            } elseif ($graph->graphtype == GRAPH_TYPE_EXPLODED) {
+                //Draw exploded graph
+            }
         });
 
-        $layout = $this->createLayoutLine(
-            $this->createAxisLayout('date', 'Date'),
-            $this->createAxisLayout(null,'Value'),
-            'Line Graph'
-        );
+        // dd($tracers);
+
+
 
         // return $layout;
-        return view('graphs.view', compact('groups', 'hosts', 'rq_groupid', 'graphs', 'rq_hostid', 'tracers', 'layout', 'rq_graphid'));
+        return view('graphs.view', compact('groups', 'hosts', 'rq_groupid', 'graphs', 'rq_hostid', 'data', 'layout', 'rq_graphid'));
     }
 
-    public function createTraceLine($x_data, $y_data, $mode, $name=null, $connectgaps=true, $size = null)
+    public function createDataLine($x_data, $y_data, $mode, $name=null, $connectgaps=true, $size = null)
     {
         return collect([
             "x"=>$x_data,
@@ -129,7 +148,7 @@ class GraphController extends Controller
         ]);
     }
 
-    public function createAxisLayout($type = null, $title = null)
+    public function createAxisLayoutLine($type = null, $title = null)
     {
         return collect([
             "type" => $type,
@@ -145,4 +164,34 @@ class GraphController extends Controller
             "yaxis" => $yaxis,
         ]);
     }
+
+    public function createDataPie($x_data, $y_data, $mode, $name=null, $connectgaps=true, $size = null)
+    {
+        return collect([
+            "values"=>$x_data,
+            "lables"=>$y_data,
+            "type" => 'pie',
+        ]);
+    }
+
+    // max clock 2147483647 03:14:07 UTC on 19 January 2038 like Y2K
+    public function getClockAndValueNumericData($itemid, $data_type, $min_clock = 0, $max_clock=2147483647)
+    {
+        $table = 'history';
+        if ($data_type == ITEM_VALUE_TYPE_UNSIGNED) {
+            $table .= '_uint';
+        }
+        $histories = DB::table($table)->where('itemid', $itemid)->where('clock', ">=", $min_clock)
+                        ->where('clock', "<", $max_clock)->orderBy('clock')->get();
+        $x_data = collect();
+        $y_data = collect();
+        $histories->each(function ($history) use ($x_data, $y_data) {
+            //multiple 1000,  miliseconds in JS
+            $x_data->push($history->clock*1000);
+            $y_data->push($history->value);
+        });
+        return collect([$x_data, $y_data]);
+    }
+
+
 }
