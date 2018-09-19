@@ -87,7 +87,7 @@ class GraphController extends Controller
         $data = collect();
         $layout = collect();
 
-        $items->each(function ($item) use ($data, $rq_graphid) {
+        $items->each(function ($item) use ($data, $rq_graphid, &$layout) {
             //get data
             $clock_value = $this->getClockAndValueNumericData($item->itemid, $item->value_type);
             //get delay time to handle gaps data
@@ -119,6 +119,7 @@ class GraphController extends Controller
             } elseif ($graph->graphtype == GRAPH_TYPE_STACKED) {
                 //Draw stacked (area chart)
                 //calculate average of data
+
             } elseif ($graph->graphtype == GRAPH_TYPE_PIE) {
                 //Draw pie graph
 
@@ -126,11 +127,7 @@ class GraphController extends Controller
                 //Draw exploded graph
             }
         });
-
         // dd($tracers);
-
-
-
         // return $layout;
         return view('graphs.view', compact('groups', 'hosts', 'rq_groupid', 'graphs', 'rq_hostid', 'data', 'layout', 'rq_graphid'));
     }
