@@ -1,4 +1,4 @@
-1. Clone project.
+1. Clone project. 
 2. cd into project.
 3. Run "composer install" to install pakage dependencies.
 4. Generate key by running "php artisan key:generate".
