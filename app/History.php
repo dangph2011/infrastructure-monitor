@@ -10,6 +10,7 @@ class History extends Model
     //
 
     protected $table = 'history';
+    protected $connection = 'zabbix';
 
     // public function getClockAttribute()
     // {

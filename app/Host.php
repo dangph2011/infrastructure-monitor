@@ -9,6 +9,7 @@ class Host extends Model
     //
     // protected $table = 'hosts';
     protected $primaryKey = 'hostid';
+    protected $connection = 'zabbix';
 
     public function hostGroups()
     {

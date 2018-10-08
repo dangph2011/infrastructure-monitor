@@ -8,6 +8,7 @@ class Item extends Model
 {
     //
     protected $primaryKey = 'itemid';
+    protected $connection = 'zabbix';
     public function host()
     {
         return $this->belongsTo(Host::class, 'hostid', 'hostid');

@@ -9,6 +9,7 @@ class Graph extends Model
     //
     // protected $table = 'graphs';
     protected $primaryKey = 'graphid';
+    protected $connection = 'zabbix';
     public function graphsItems()
     {
         return $this->hasMany(GraphsItem::class, 'graphid', 'graphid');

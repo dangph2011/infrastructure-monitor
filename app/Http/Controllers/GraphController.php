@@ -142,7 +142,7 @@ class GraphController extends Controller
         if ($data_type == ITEM_VALUE_TYPE_UNSIGNED) {
             $table .= '_uint';
         }
-        $histories = DB::table($table)->where('itemid', $itemid)->where('clock', ">=", $min_clock)
+        $histories = DB::connection('zabbix')->table($table)->where('itemid', $itemid)->where('clock', ">=", $min_clock)
                         ->where('clock', "<", $max_clock)->orderBy('clock')->get();
         $x_data = collect();
         $y_data = collect();
@@ -152,5 +152,17 @@ class GraphController extends Controller
             $y_data->push($history->value);
         });
         return collect([$x_data, $y_data]);
+    }
+
+    //download graph
+    public function download($data, $layout)
+    {
+        $pdf = \PDF::loadView('graphs.plotly_download', compact('data', 'layout'))->setPaper('a4')->setOrientation('landscape');
+        $pdf->setOption('enable-javascript', true);
+        $pdf->setOption('javascript-delay', 10000);
+        $pdf->setOption('enable-smart-shrinking', true);
+        $pdf->setOption('no-stop-slow-scripts', true);
+        return $pdf->download('google.pdf');
+        // return view('googlechart');
     }
 }
