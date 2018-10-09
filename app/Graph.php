@@ -17,6 +17,6 @@ class Graph extends Model
 
     public function items()
     {
-        return $this->belongsToMany(Item::class, 'graphs_items', 'graphid', 'itemid');
+        return $this->belongsToMany(Item::class, 'graphs_items', 'graphid', 'itemid')->withPivot('type');
     }
 }
