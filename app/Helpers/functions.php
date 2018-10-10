@@ -72,11 +72,11 @@ function createLayoutLine($xaxis = null, $yaxis = null, $title = null)
     ]);
 }
 
-function createDataPie($x_data, $y_data, $mode, $name=null, $connectgaps=true, $size = null)
+function createDataPie($value, $lable)
 {
     return collect([
-        "values"=>$x_data,
-        "lables"=>$y_data,
+        "values"=>$value,
+        "labels"=>$lable,
         "type" => 'pie',
     ]);
 }

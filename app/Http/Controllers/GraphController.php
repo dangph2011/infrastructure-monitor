@@ -77,9 +77,10 @@ class GraphController extends Controller
         // $graphid = $rq_graphid;
 
         //get items based on selected graph
-        $items = Item::whereHas('graphs', function ($query) use ($rq_graphid) {
-            $query->where('graphs.graphid', $rq_graphid);
-        })->get();
+        $items = Graph::find($rq_graphid)->items;
+        // $items = Item::whereHas('graphs', function ($query) use ($rq_graphid) {
+        //     $query->where('graphs.graphid', $rq_graphid);
+        // })->get();
 
         $data = collect();
         $layout = collect();
@@ -115,13 +116,30 @@ class GraphController extends Controller
                     createYAxisLayoutLine(null, 'Value', true),
                     'Line Graph'
                 );
+                // return view('graphs.view', compact('groups', 'hosts', 'rq_groupid', 'graphs', 'rq_hostid', 'data', 'layout', 'rq_graphid'));
 
             } elseif ($graph->graphtype == GRAPH_TYPE_STACKED) {
                 //Draw stacked (area chart)
-                //calculate average of data
 
             } elseif ($graph->graphtype == GRAPH_TYPE_PIE) {
                 //Draw pie graph
+                //Get total of pie
+                $value = collect();
+                $label = collect();
+                $items->each(function ($item) use ($value, $label) {
+                    $clock_value = $this->getClockAndValueNumericData($item->itemid, $item->value_type);
+                    if ($item->pivot->type == 2) {
+                        $value->prepend($clock_value[1]->avg());
+                        $label->prepend($item->name);
+                    } else {
+                        $value->push($clock_value[1]->avg());
+                        $label->push($item->name);
+                    }
+                    //get delay time to handle gaps data
+                });
+                $value[0] -= $value->slice(1)->sum();
+
+                $data->push(createDataPie($value, $label));
 
             } elseif ($graph->graphtype == GRAPH_TYPE_EXPLODED) {
                 //Draw exploded graph
