@@ -80,3 +80,30 @@ function createDataPie($value, $lable)
         "type" => 'pie',
     ]);
 }
+
+function createDataStacked($x_data, $y_data, $stackgroup, $groupnorm, $connectgaps=true)
+{
+    return collect([
+        "x"=>$x_data,
+        "y"=>$y_data,
+        "connectgaps" => $connectgaps,
+        "stackgroup"=>$stackgroup,
+        "groupnorm"=>$groupnorm,
+    ]);
+}
+
+
+function smoothClockData($clockValue, $delayTime){
+    //add null to missing data
+    $timestamp = 0;
+    foreach ($clockValue[0] as $key => $clock) {
+        if ($key != 0) {
+            if ($clockValue[0][$key] - $timestamp > (2 * $delayTime)) {
+                $clockValue[0]->splice($key, 0, $timestamp + $delayTime);
+                $clockValue[1]->splice($key, 0, "null");
+                $key++;
+            }
+        }
+        $timestamp = $clockValue[0][$key];
+    }
+}

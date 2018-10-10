@@ -74,8 +74,6 @@ class GraphController extends Controller
                 });
             })->orderBy('name')->get();
 
-        // $graphid = $rq_graphid;
-
         //get items based on selected graph
         $items = Graph::find($rq_graphid)->items;
         // $items = Item::whereHas('graphs', function ($query) use ($rq_graphid) {
@@ -89,23 +87,13 @@ class GraphController extends Controller
             if ($graph->graphtype == GRAPH_TYPE_NORMAL) {
                 $items->each(function ($item) use ($data, $rq_graphid) {
                     //get data
-                    $clock_value = $this->getClockAndValueNumericData($item->itemid, $item->value_type);
+                    $clockValue = $this->getClockAndValueNumericData($item->itemid, $item->value_type);
                     //get delay time to handle gaps data
-                    $delay_time = Item::convertToTimestamp($item->delay);
-                    $timestamp = 0;
-                    //add null to missing data
-                    foreach ($clock_value[0] as $key => $clock) {
-                        if ($key != 0) {
-                            if ($clock_value[0][$key] - $timestamp > (2 * $delay_time)) {
-                                $clock_value[0]->splice($key, 0, $timestamp + $delay_time);
-                                $clock_value[1]->splice($key, 0, "null");
-                                $key++;
-                            }
-                        }
-                        $timestamp = $clock_value[0][$key];
-                    }
+                    $delayTime = Item::convertToTimestamp($item->delay);
+                    //add null to gaps data
+                    smoothClockData($clockValue, $delayTime);
 
-                    $data->push(createDataLine($clock_value[0], $clock_value[1], "line", $item->name, false, 1.5));
+                    $data->push(createDataLine($clockValue[0], $clockValue[1], "line", $item->name, false, 1.5));
                 });
                 //Draw line graph
 
@@ -120,19 +108,36 @@ class GraphController extends Controller
 
             } elseif ($graph->graphtype == GRAPH_TYPE_STACKED) {
                 //Draw stacked (area chart)
-
+                $items->each(function ($item) use ($data, $rq_graphid) {
+                    //get data
+                    $clockValue = $this->getClockAndValueNumericData($item->itemid, $item->value_type, 'trends');
+                    //get delay time to handle gaps data
+                    $delayTime = Item::convertToTimestamp($item->delay);
+                    //add null to gaps data
+                    smoothClockData($clockValue, $delayTime);
+                    //create data stacked
+                    $data->push(createDataStacked($clockValue[0], $clockValue[1], "one", "percent"));
+                });
+                //Draw line graph
+                $rangeslider = collect();
+                $rangeselector = collect(['buttons' => getSelectorOption(['1m', '3m', '6m', 'ytd', '1y'])]);
+                $layout = createLayoutLine(
+                    createXAxisLayoutLine('date', 'Date', true, $rangeselector, $rangeslider),
+                    createYAxisLayoutLine(null, 'Value', true),
+                    'Stacked graph'
+                );
             } elseif ($graph->graphtype == GRAPH_TYPE_PIE) {
                 //Draw pie graph
                 //Get total of pie
                 $value = collect();
                 $label = collect();
                 $items->each(function ($item) use ($value, $label) {
-                    $clock_value = $this->getClockAndValueNumericData($item->itemid, $item->value_type);
+                    $clockValue = $this->getClockAndValueNumericData($item->itemid, $item->value_type);
                     if ($item->pivot->type == 2) {
-                        $value->prepend($clock_value[1]->avg());
+                        $value->prepend($clockValue[1]->avg());
                         $label->prepend($item->name);
                     } else {
-                        $value->push($clock_value[1]->avg());
+                        $value->push($clockValue[1]->avg());
                         $label->push($item->name);
                     }
                     //get delay time to handle gaps data
@@ -151,22 +156,31 @@ class GraphController extends Controller
     }
 
     // max clock 2147483647 03:14:07 UTC on 19 January 2038 like Y2K
-    public function getClockAndValueNumericData($itemid, $data_type, $min_clock = 0, $max_clock = 2147483647)
+    public function getClockAndValueNumericData($itemid, $data_type, $table='history', $min_clock = 0, $max_clock = 2147483647)
     {
-        $table = 'history';
+        // $table = 'history';
         if ($data_type == ITEM_VALUE_TYPE_UNSIGNED) {
             $table .= '_uint';
         }
-        $histories = DB::connection('zabbix')->table($table)->where('itemid', $itemid)->where('clock', ">=", $min_clock)
+
+        $tableData = DB::connection('zabbix')->table($table)->where('itemid', $itemid)->where('clock', ">=", $min_clock)
             ->where('clock', "<", $max_clock)->orderBy('clock')->get();
-        $x_data = collect();
-        $y_data = collect();
-        $histories->each(function ($history) use ($x_data, $y_data) {
-            //multiple 1000,  miliseconds in JS
-            $x_data->push($history->clock * 1000);
-            $y_data->push($history->value);
-        });
-        return collect([$x_data, $y_data]);
+        $xData = collect();
+        $yData = collect();
+        if (starts_with($table, 'history')) {
+            $tableData->each(function ($history) use ($xData, $yData) {
+                //multiple 1000,  miliseconds in JS
+                $xData->push($history->clock * 1000);
+                $yData->push($history->value);
+            });
+        } else if (starts_with($table, 'trends')) {
+            $tableData->each(function ($history) use ($xData, $yData) {
+                //multiple 1000,  miliseconds in JS
+                $xData->push($history->clock * 1000);
+                $yData->push($history->value_avg);
+            });
+        }
+        return collect([$xData, $yData]);
     }
 
     //download graph
