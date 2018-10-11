@@ -102,7 +102,7 @@ class GraphController extends Controller
                 $layout = createLayoutLine(
                     createXAxisLayoutLine('date', 'Date', true, $rangeselector, $rangeslider),
                     createYAxisLayoutLine(null, 'Value', true),
-                    'Line Graph'
+                    $graph->name
                 );
                 // return view('graphs.view', compact('groups', 'hosts', 'rq_groupid', 'graphs', 'rq_hostid', 'data', 'layout', 'rq_graphid'));
 
@@ -124,7 +124,7 @@ class GraphController extends Controller
                 $layout = createLayoutLine(
                     createXAxisLayoutLine('date', 'Date', true, $rangeselector, $rangeslider),
                     createYAxisLayoutLine(null, 'Value', true),
-                    'Stacked graph'
+                    $graph->name
                 );
             } elseif ($graph->graphtype == GRAPH_TYPE_PIE) {
                 //Draw pie graph
@@ -145,6 +145,8 @@ class GraphController extends Controller
                 $value[0] -= $value->slice(1)->sum();
 
                 $data->push(createDataPie($value, $label));
+
+                $layout = createLayoutTitle($graph->name);
 
             } elseif ($graph->graphtype == GRAPH_TYPE_EXPLODED) {
                 //Draw exploded graph
