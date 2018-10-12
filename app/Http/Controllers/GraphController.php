@@ -75,7 +75,7 @@ class GraphController extends Controller
             })->orderBy('name')->get();
 
         //get items based on selected graph
-        $items = Graph::find($rq_graphid)->items;
+
         // $items = Item::whereHas('graphs', function ($query) use ($rq_graphid) {
         //     $query->where('graphs.graphid', $rq_graphid);
         // })->get();
@@ -84,6 +84,7 @@ class GraphController extends Controller
         $layout = collect();
         if ($rq_graphid != 0) {
             $graph = Graph::find($rq_graphid);
+            $items = Graph::find($rq_graphid)->items;
             if ($graph->graphtype == GRAPH_TYPE_NORMAL) {
                 $items->each(function ($item) use ($data, $rq_graphid) {
                     //get data
