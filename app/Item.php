@@ -24,6 +24,11 @@ class Item extends Model
         return $this->belongsToMany(Graph::class, 'graphs_items', 'itemid', 'graphid');
     }
 
+    public function triggers()
+    {
+        return $this->belongsToMany(Trigger::class, 'functions', 'itemid', 'triggerid');
+    }
+
     //convert delay time to unix time gaps, interval time to get data
     public static function convertToTimestamp($time){
         if(strpos($time,'s')){
@@ -39,6 +44,4 @@ class Item extends Model
         }
         return $time*1000;
     }
-
-
 }

@@ -17,8 +17,6 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/graph', 'GraphController@view');
-
 Auth::routes();
 
 Route::get('/home', 'HomeController@index')->name('home');
@@ -26,3 +24,20 @@ Route::get('/home', 'HomeController@index')->name('home');
 Route::get('/graph', 'GraphController@view');
 
 Route::post('/graph', 'GraphController@view');
+
+Route::get('/graph/download/{data}/{layout}', [
+    'uses' => 'GraphController@download',
+    'as'   => '/graph/download'
+]);
+
+Route::get('/problem', 'ProblemController@view');
+
+Route::post('/problem', 'ProblemController@view');
+
+Route::get('/trigger', 'TriggerController@view');
+
+Route::post('/trigger', 'TriggerController@view');
+
+Route::get('/trigger/comments', 'TriggerController@comment');
+
+Route::post('/trigger/comments', 'TriggerController@comment');

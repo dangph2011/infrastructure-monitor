@@ -2,11 +2,31 @@
 @section('page-header') Graph Page
 @endsection
 
-@section('scripts')
-{{-- <script src="/bower_components/moment/moment.js"></script> --}}
-{{-- <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js"></script> --}}
+@section('scripts') {{--
+<script src="/bower_components/moment/moment.js"></script> --}} {{--
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js"></script> --}}
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 @endsection
+
+
+<style>
+    /* Style buttons */
+
+    .btn {
+        background-color: DodgerBlue;
+        border: none;
+        color: white;
+        padding: 12px 30px;
+        cursor: pointer;
+        font-size: 20px;
+    }
+
+    /* Darker background on mouse-over */
+
+    .btn:hover {
+        background-color: RoyalBlue;
+    }
+</style>
 
 @section('contents')
 
@@ -64,12 +84,51 @@
     </div>
 
     <div id="plotid" class="container-fluid"></div>
+    {{-- <button class="btn"><i class="fa fa-download"></i> Download</button> --}} {{-- <a href="{{ url('/graph/download' . $data . $layout) }}"
+        class="btn btn-primary" role="button">Download Link</a> --}}
+    {{-- <img id="jpg-export"></img> --}}
 
     <script>
         var data = {!!$data!!};
         var layout = {!!$layout!!}
         var myDiv = document.getElementById('plotid')
         Plotly.newPlot(myDiv, data, layout);
+
+        // Plotly.relayout( myDiv, {
+        //     'xaxis.autorange': true,
+        //     'yaxis.autorange': true
+        // });
     </script>
+
+    {{-- <script>
+        var d3 = Plotly.d3;
+        var img_jpg= d3.select('#jpg-export');
+
+        // Ploting the Graph
+
+        var trace={x:[3,9,8,10,4,6,5],y:[5,7,6,7,8,9,8],type:"scatter"};
+        var trace1={x:[3,4,1,6,8,9,5],y:[4,2,5,2,1,7,3],type:"scatter"};
+        var data = [trace,trace1];
+        var layout = {title : "Simple Javascript Graph"};
+        Plotly.plot(
+        'plotid',
+        data,
+        layout)
+
+        // static image in jpg format
+
+        .then(
+            function(gd)
+            {
+            Plotly.toImage(gd,{height:300,width:300})
+                .then(
+                    function(url)
+                {
+                    img_jpg.attr("src", url);
+                    return Plotly.toImage(gd,{format:'jpeg',height:400,width:400});
+                }
+                )
+            });
+    </script> --}}
 </div>
 @endsection
