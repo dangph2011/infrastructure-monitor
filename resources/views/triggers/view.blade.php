@@ -76,7 +76,11 @@
             @foreach($triggers as $trigger)
             <tr>
                 {{-- severity  --}}
-                <td bgcolor="#{{$config['severity_color_' . $trigger->priority]}}"> {{$config['severity_name_'.$trigger->priority]}} </td>
+                @if ($trigger->value)
+                    <td bgcolor="#{{$config['severity_color_' . $trigger->priority]}}"> {{$config['severity_name_'.$trigger->priority]}} </td>
+                @else
+                    <td bgcolor="#59db8f"> {{$config['severity_name_'.$trigger->priority]}} </td>
+                @endif
 
                 {{-- status --}}
                 @if ($trigger->value == TRIGGER_VALUE_TRUE)
