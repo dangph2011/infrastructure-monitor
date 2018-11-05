@@ -45,7 +45,7 @@
             </div>
             <div class='col-md-4'>
                     <div class="form-group">
-                        <label for="">Show</label>
+                        <label for="">Phân loại</label>
                         <div class="form-check form-check-inline">
                             <label class="form-check-label">
                                 <input onchange='this.form.submit()' class="form-check-input" type="radio" name="show_problems" id="show_problems_3" value="3" {{ $rq_show_problems == '3' ? 'checked' : '' }}>Sự cố
@@ -124,4 +124,8 @@
 
     </div>
 </div>
+<style type="text/css">
+    input[type="radio"]{margin: 10px 5px};}
+ </style>
+
 @endsection
