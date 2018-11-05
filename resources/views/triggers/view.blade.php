@@ -107,7 +107,7 @@
                 @if ($trigger->lastchange == 0)
                     <td></td>
                 @else
-                    <td>{{\Carbon\Carbon::createFromTimestamp($trigger->lastchange)->diffForHumans()}}</td>
+                    <td>{{\Carbon\Carbon::createFromTimestamp($trigger->lastchange)->diffForHumans(null,true,true, 3)}}</td>
                     {{-- <td>{{convertDate2age($trigger->lastchange)}}</td> --}}
                 @endif
                 {{-- ack --}}
