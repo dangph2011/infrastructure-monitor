@@ -14,4 +14,9 @@ class Problem extends Model
     {
         return $this->hasOne(Event::class, 'eventid');
     }
+
+    public function trigger()
+    {
+        return $this->hasOne(Trigger::class, 'triggerid', 'objectid');
+    }
 }

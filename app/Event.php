@@ -14,4 +14,14 @@ class Event extends Model
     {
         return $this->hasOne(Problem::class, 'eventid');
     }
+
+    public function trigger()
+    {
+        return $this->hasOne(Trigger::class, 'triggerid', 'objectid');
+    }
+
+    public function eventRecovery()
+    {
+        return $this->hasOne(EventRecovery::class, 'eventid', 'eventid');
+    }
 }
