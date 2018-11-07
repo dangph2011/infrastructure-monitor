@@ -75,7 +75,7 @@ class ProblemController extends Controller
         $config = \App\Config::first();
 
         // print_r($problems->toJson());
-        return view('problem', compact('groups', 'hosts', 'rq_groupid', 'rq_hostid', 'problems', 'rq_show_problems', 'config'));
+        return view('problems.problem', compact('groups', 'hosts', 'rq_groupid', 'rq_hostid', 'problems', 'rq_show_problems', 'config'));
     }
 
     public function getDataEvents()

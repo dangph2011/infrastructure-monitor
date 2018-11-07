@@ -82,6 +82,6 @@ class TriggerController extends Controller
         $config = \App\Config::first();
         // return $triggers->toJson();
         // $host =
-        return view('triggers.view', compact('groups', 'hosts', 'rq_groupid', 'rq_hostid', 'triggers', 'rq_show_triggers', 'config'));
+        return view('problems.trigger', compact('groups', 'hosts', 'rq_groupid', 'rq_hostid', 'triggers', 'rq_show_triggers', 'config'));
     }
 }

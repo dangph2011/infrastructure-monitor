@@ -108,7 +108,7 @@ function smoothClockData($clockValue, $delayTime){
             if ($clockValue[0][$key] - $timestamp > (2 * $delayTime)) {
                 $clockValue[0]->splice($key, 0, $timestamp + $delayTime);
                 $clockValue[1]->splice($key, 0, "null");
-                // $key++;
+                $key++;
             }
         }
         $timestamp = $clockValue[0][$key];
