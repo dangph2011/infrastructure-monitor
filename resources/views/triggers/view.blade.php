@@ -130,4 +130,8 @@
 
 </div>
 </div>
+
+<style type="text/css">
+    input[type="radio"]{margin: 10px 5px};}
+ </style>
 @endsection
