@@ -84,4 +84,8 @@ class TriggerController extends Controller
         // $host =
         return view('problems.trigger', compact('groups', 'hosts', 'rq_groupid', 'rq_hostid', 'triggers', 'rq_show_triggers', 'config'));
     }
+
+    public function create() {
+        return view('problems.trigger_create');
+    }
 }
