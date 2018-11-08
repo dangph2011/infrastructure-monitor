@@ -26,7 +26,7 @@
                 </span>
                 </a>
         <ul class="treeview-menu">
-            <li><a href="#">Create trigger</a></li>
+            <li><a href="/problems/trigger/create">Create trigger</a></li>
             <li><a href="/problems/problem">Problem</a></li>
             <li><a href="/problems/trigger">Trigger</a></li>
         </ul>

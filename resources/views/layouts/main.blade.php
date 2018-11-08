@@ -117,5 +117,4 @@ desired effect
      Both of these plugins are recommended to enhance the
      user experience. -->
 </body>
-
 </html>
