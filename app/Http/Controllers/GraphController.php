@@ -197,4 +197,8 @@ class GraphController extends Controller
         return $pdf->download('google.pdf');
         // return view('googlechart');
     }
+
+    public function create(){
+        return view('graphs.create');
+    }
 }

@@ -105,7 +105,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-check-label col-sm-3">Allow manual close</label>
+                    <label class="form-check-label col-sm-3 text-right">Allow manual close</label>
                     <div class="col-sm-9">
                         <input type="checkbox" class="form-check-input" name="manual_close" id="manual_close" value="1">
                     </div>
@@ -117,8 +117,6 @@
                         <input type="text" class="form-control" name="url" id="url">
                     </div>
                 </div>
-
-
 
                 <div class="form-group">
                     <label class='control-label col-sm-3' for="comments">Description</label>
