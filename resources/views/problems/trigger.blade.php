@@ -10,7 +10,7 @@
 
 <div class="container-fluid">
     <div class="row">
-        <form method="GET" action="problems/trigger">
+        <form method="GET" action="/problems/trigger">
             {{csrf_field()}}
             <div class='col-md-4'>
                 <div class="form-group">
