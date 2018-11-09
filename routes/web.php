@@ -43,3 +43,9 @@ Route::post('/problems/trigger/create', 'TriggerController@store');
 Route::get('problems/trigger/comments', 'TriggerController@comment');
 
 Route::post('problems/trigger/comments', 'TriggerController@comment');
+
+Route::get('/report', 'ReportController@view');
+
+Route::get('/report/create', 'ReportController@create');
+
+Route::post('/report/create', 'ReportController@store');
