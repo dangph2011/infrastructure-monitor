@@ -2,9 +2,6 @@
 @section('page-header') Report Page
 @endsection
 
-@section('scripts')
-<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-@endsection
 
 @section('contents')
 
@@ -50,12 +47,24 @@
                 </div>
             </div>
             <div>
-                <div class="form-group">
-                    <label class="form-check-label col-sm-3 text-right">Allow manual close</label>
-                    <div class="col-sm-9">
-                        <input type="checkbox" class="form-check-input" name="manual_close" id="manual_close" value="1">
-                    </div>
+                <div class='col-md-4'>
                 </div>
+                <div class='col-md-4'>
+                    @foreach ($graphs as $graph)
+                    <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="{{$graph->graphid}}">
+                            <label class="form-check-label" for="check_{{$graph->graphid}}">{{$graph->name}}</label>
+                        </div>
+                    @endforeach
+                    <hr/>
+                    <button type="button" id="add" class="btn btn-primary">Add</button>
+                    <button type="button" id="preview" class="btn btn-default">Preview</button>
+                    <button type="button" id="export" class="btn btn-default">Export</button>
+                    <button type="button" id="cancel" class="btn btn-default">Cancel</button>
+                </div>
+                <div class='col-md-4'>
+                </div>
+
             </div>
         </form>
     </div>
