@@ -52,3 +52,5 @@ define('SEC_PER_DAY',			86400);
 define('SEC_PER_WEEK',			604800);
 define('SEC_PER_MONTH',			2592000);
 define('SEC_PER_YEAR',			31536000);
+
+define('SCALE_RATIO', 0.8);
