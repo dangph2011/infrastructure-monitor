@@ -7,6 +7,7 @@ use App\Group;
 use App\Host;
 use App\Report;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redirect;
 
 class ReportController extends Controller
 {
@@ -22,6 +23,7 @@ class ReportController extends Controller
      */
     public function index()
     {
+        print_r("index");
         $reports = Report::all();
         return view('reports.index', compact('reports'));
     }
@@ -130,7 +132,10 @@ class ReportController extends Controller
      */
     public function show($id)
     {
-        return view('reports.index', compact('reports'));
+        print_r("show");
+        $report = Report::find($id);
+
+        return view('reports.show', compact('report'));
         //
     }
 
@@ -142,7 +147,9 @@ class ReportController extends Controller
      */
     public function edit($id)
     {
-        //
+        print_r("edit");
+        $report = Report::find($id);
+        return view('reports.show', compact('report'));
     }
 
     /**
@@ -165,6 +172,13 @@ class ReportController extends Controller
      */
     public function destroy($id)
     {
-        //
+        print_r("destroy");
+        // delete
+        $report = Report::findOrFail($id);
+        $report->delete();
+        // redirect
+        return redirect()->route('reports.index')
+            ->with('flash_message',
+             'Successfully deleted the report id ' + $id);
     }
 }

@@ -23,6 +23,13 @@ scratch. This page gets rid of all links and provides the needed markup only.
         apply the skin class to the body tag so the changes take effect. -->
     <link rel="stylesheet" href="{{asset('/bower_components/admin-lte/dist/css/skins/skin-blue.min.css')}}">
 
+    <!-- jQuery 3 -->
+    <script src="{{asset('/bower_components/jquery/dist/jquery.min.js')}}"></script>
+    <!-- Bootstrap 3.3.7 -->
+    <script src="{{asset('/bower_components/bootstrap/dist/js/bootstrap.min.js')}}"></script>
+    <!-- AdminLTE App -->
+    <script src="{{asset('/bower_components/admin-lte/dist/js/adminlte.min.js')}}"></script>
+
     @yield('scripts')
 
     @yield('csss')
@@ -105,13 +112,6 @@ desired effect
     <!-- ./wrapper -->
 
     <!-- REQUIRED JS SCRIPTS -->
-
-    <!-- jQuery 3 -->
-    <script src="{{asset('/bower_components/jquery/dist/jquery.min.js')}}"></script>
-    <!-- Bootstrap 3.3.7 -->
-    <script src="{{asset('/bower_components/bootstrap/dist/js/bootstrap.min.js')}}"></script>
-    <!-- AdminLTE App -->
-    <script src="{{asset('/bower_components/admin-lte/dist/js/adminlte.min.js')}}"></script>
 
     <!-- Optionally, you can add Slimscroll and FastClick plugins.
      Both of these plugins are recommended to enhance the
