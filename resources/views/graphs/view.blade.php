@@ -10,27 +10,6 @@
 <script src="{{asset('js/html2canvas.js')}}"></script>
 @endsection
 
-
-<style>
-    /* Style buttons */
-
-    .btn {
-        background-color: DodgerBlue;
-        border: none;
-        color: white;
-        padding: 12px 30px;
-        cursor: pointer;
-        font-size: 20px;
-    }
-
-    /* Darker background on mouse-over */
-
-    .btn:hover {
-        background-color: RoyalBlue;
-    }
-</style>
-
-
 @section('contents')
 
 <div class="container-fluid">
@@ -87,10 +66,7 @@
     </div>
 
     <div id="plotid" class="container-fluid"></div>
-    {{-- <button class="btn"><i class="fa fa-download"></i> Download</button> --}} {{-- <a href="{{ url('/graph/download' . $data . $layout) }}"
-        class="btn btn-primary" role="button">Download Link</a> --}}
-    <img id="jpg-export"></img>
-    <div><button type="button" class="btn btn-primary btn-lg" style="float: right;" onclick="print()">Save</button></div>
+    <div><button type="button" class="btn btn-primary" style="float: right;" onclick="print()">Save</button></div>
 
     <script>
         var data = {!!$data!!};
