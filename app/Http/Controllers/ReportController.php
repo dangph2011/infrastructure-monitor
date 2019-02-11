@@ -134,8 +134,17 @@ class ReportController extends Controller
     public function show($id)
     {
         $report = Report::find($id);
+        $graphs = $report->graphs;
 
-        return view('reports.show', compact('report'));
+        $reportData = collect();
+        foreach ($graphs as $g) {
+            $data = collect();
+            $layout = collect();
+            list($data, $layout) = getDataAndLayoutFromGraph($g->graphid);
+            $reportData->push(['data' => $data, 'layout' => $layout]);
+        }
+
+        return view('reports.show', compact('report', 'reportData'));
         //
     }
 
