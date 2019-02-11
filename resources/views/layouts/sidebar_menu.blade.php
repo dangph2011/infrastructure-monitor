@@ -34,8 +34,8 @@
                     </span>
                     </a>
         <ul class="treeview-menu">
-            <li><a href="/report/create">Create report</a></li>
             <li><a href="/report">View report</a></li>
+            <li><a href="/report/create">Create report</a></li>
         </ul>
     </li>
 

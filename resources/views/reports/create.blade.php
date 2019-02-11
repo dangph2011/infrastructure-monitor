@@ -76,7 +76,7 @@
         </div>
 
         <br>
-        <div><button type="submit" class="btn btn-primary btn-lg" style="float: right;">Save</button></div>
+        <div style="text-align: center;"><button type="submit" class="btn btn-primary">Save</button></div>
     </form>
 </div>
 
