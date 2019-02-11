@@ -8,6 +8,7 @@ use App\Host;
 use App\Report;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Session;
 
 class ReportController extends Controller
 {
@@ -23,7 +24,6 @@ class ReportController extends Controller
      */
     public function index()
     {
-        print_r("index");
         $reports = Report::all();
         return view('reports.index', compact('reports'));
     }
@@ -107,11 +107,12 @@ class ReportController extends Controller
         ]);
 
         $reListView = request('to', 0);
+        $description = request('description', '');
 
         if ($reListView != 0) {
             $report = new Report;
             $report->name = request('name');
-            $report->description = request('description');
+            $report->description = $description;
             $report->save();
             //
             $graphids = collect();
@@ -132,7 +133,6 @@ class ReportController extends Controller
      */
     public function show($id)
     {
-        print_r("show");
         $report = Report::find($id);
 
         return view('reports.show', compact('report'));
@@ -147,7 +147,6 @@ class ReportController extends Controller
      */
     public function edit($id)
     {
-        print_r("edit");
         $report = Report::find($id);
         return view('reports.show', compact('report'));
     }
@@ -172,13 +171,16 @@ class ReportController extends Controller
      */
     public function destroy($id)
     {
-        print_r("destroy");
         // delete
         $report = Report::findOrFail($id);
+
+        $report->destroyReport();
+
         $report->delete();
+
         // redirect
-        return redirect()->route('reports.index')
+        return redirect()->route('report.index')
             ->with('flash_message',
-             'Successfully deleted the report id ' + $id);
+             'Successfully deleted the report id ' . $id);
     }
 }

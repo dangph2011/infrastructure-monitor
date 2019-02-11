@@ -23,4 +23,8 @@ class Report extends Model
     public function saveReport($graphIDs) {
         $this->graphs()->sync($graphIDs);
     }
+
+    public function destroyReport() {
+        $this->graphs()->detach();
+    }
 }
