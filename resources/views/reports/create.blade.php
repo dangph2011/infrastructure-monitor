@@ -52,32 +52,64 @@
         </div>
 
         <div class="row">
-            <div class="col-sm-5">
-                <select name="from" id="lstview" class="form-control formcls" size="12" multiple="multiple">
-                @foreach($graphs as $graph)
-                    <option value="{{ $graph->graphid }}"> {{ $graph->name }}</option>
-                @endforeach
-            </select>
+            <div class='col-md-3'>
             </div>
+            <div class='col-md-6'>
 
-            <div class="col-xs-2">
-                <button type="button" id="lstview_undo" class="btn btn-danger btn-block">undo</button>
-                <button type="button" id="lstview_rightAll" class="btn btn-primary btn-block"><i class="glyphicon glyphicon-forward"></i></button>
-                <button type="button" id="lstview_rightSelected" class="btn btn-success btn-block"><i class="glyphicon glyphicon-chevron-right"></i></button>
-                <button type="button" id="lstview_leftSelected" class="btn btn-success btn-block"><i class="glyphicon glyphicon-chevron-left"></i></button>
-                <button type="button" id="lstview_leftAll" class="btn btn-primary btn-block"><i class="glyphicon glyphicon-backward"></i></button>
-                <button type="button" id="lstview_redo" class="btn btn-warning btn-block">redo</button>
+                <div class="form-group">
+                  <label for="name">Name*</label>
+                  <input type="text" class="form-control" name="name" id="name" aria-describedby="helpId" placeholder="">
+                </div>
+
+                <div class="form-group">
+                  <label for="description">Description</label>
+                  <input type="text" class="form-control" name="description" id="description" aria-describedby="helpId" placeholder="">
+                </div>
+
+                <div class="form-group">
+                  <label for="graph">Graph*</label>
+                </div>
+
             </div>
+            <div class='col-md-3'>
+            </div>
+        </div>
 
-            <div class="col-sm-5">
-                <select name="to[]" id="lstview_to" class="form-control formcls" size="12" multiple="multiple">
-                </select>
+        <div class="row">
+            <div class='col-md-2'>
+            </div>
+            <div class='col-md-8'>
+                <div class="col-sm-5">
+                    <select name="from" id="lstview" class="form-control formcls" size="12" multiple="multiple">
+                        @foreach($graphs as $graph)
+                            <option value="{{ $graph->graphid }}"> {{ $graph->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="col-xs-2">
+                    <button type="button" id="lstview_undo" class="btn btn-danger btn-block">undo</button>
+                    <button type="button" id="lstview_rightAll" class="btn btn-primary btn-block"><i class="glyphicon glyphicon-forward"></i></button>
+                    <button type="button" id="lstview_rightSelected" class="btn btn-success btn-block"><i class="glyphicon glyphicon-chevron-right"></i></button>
+                    <button type="button" id="lstview_leftSelected" class="btn btn-success btn-block"><i class="glyphicon glyphicon-chevron-left"></i></button>
+                    <button type="button" id="lstview_leftAll" class="btn btn-primary btn-block"><i class="glyphicon glyphicon-backward"></i></button>
+                    <button type="button" id="lstview_redo" class="btn btn-warning btn-block">redo</button>
+                </div>
+
+                <div class="col-sm-5">
+                    <select name="to[]" id="lstview_to" class="form-control formcls" size="12" multiple="multiple">
+                    </select>
+                </div>
+
+                <div class='col-md-2'>
+                </div>
             </div>
         </div>
 
         <br>
         <div style="text-align: center;"><button type="submit" class="btn btn-primary">Save</button></div>
     </form>
+    @include('layouts.error')
 </div>
 
 {{--
@@ -89,7 +121,6 @@
     jQuery(document).ready(function($) {
         $("#lstview").multiselect();
     });
-
 </script>
 </div>
 @endsection

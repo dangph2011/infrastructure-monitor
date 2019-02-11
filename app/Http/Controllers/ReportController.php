@@ -99,12 +99,17 @@ class ReportController extends Controller
      */
     public function store(Request $request)
     {
+        $this->validate(request(), [
+            'name' => 'required',
+            'to' => 'required',
+        ]);
+
         $reListView = request('to', 0);
 
         if ($reListView != 0) {
             $report = new Report;
-            $report->name = "name test";
-            $report->description = "des test";
+            $report->name = request('name');
+            $report->description = request('description');
             $report->save();
             //
             $graphids = collect();
