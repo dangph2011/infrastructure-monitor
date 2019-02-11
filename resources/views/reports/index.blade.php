@@ -28,7 +28,7 @@
                         <a href="{{ route('report.show', $value->reportid) }}" class="btn btn-primary" style="margin-right: 3px;">View</a>
                         <a href="{{ route('report.edit', $value->reportid) }}" class="btn btn-info" style="margin-right: 3px;">Edit</a>
                         <button form="delete-report-form-{{$value->reportid}}" type="submit" class="btn btn-danger" style="margin-right: 3px;">Delete</button>
-                    <form id="delete-report-form-{{$value->reportid}}" class="delete-report" action="/report/{{$value->reportid}}" method="POST" onsubmit="return confirm('Do you want to delete this report: {{$value->reportid}}?');">
+                        <form id="delete-report-form-{{$value->reportid}}" class="delete-report" action="/report/{{$value->reportid}}" method="POST" onsubmit="return confirm('Do you want to delete this report id: {{$value->reportid}}?');">
                             {{ csrf_field() }}
                             <input type="hidden" name="_method" value="DELETE">
                         </form>
