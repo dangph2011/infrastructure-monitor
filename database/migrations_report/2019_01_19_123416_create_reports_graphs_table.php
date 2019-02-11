@@ -4,8 +4,9 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateReportGraphTable extends Migration
+class CreateReportsGraphsTable extends Migration
 {
+    protected $connection = 'zabbix';
     /**
      * Run the migrations.
      *
@@ -25,13 +26,13 @@ class CreateReportGraphTable extends Migration
 
             $table->foreign('reportid', 'report_idx')
                 ->references('reportid')->on('reports')
-                ->onDelete('cascade')
-                ->onUpdate('restrict');
+                ->onDelete('restrict')
+                ->onUpdate('cascade');
 
             $table->foreign('graphid', 'graph_idx')
                 ->references('graphid')->on('graphs')
-                ->onDelete('cascade')
-                ->onUpdate('restrict');
+                ->onDelete('restrict')
+                ->onUpdate('cascade');
         });
     }
 

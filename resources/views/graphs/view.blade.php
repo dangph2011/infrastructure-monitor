@@ -6,6 +6,8 @@
 <script src="/bower_components/moment/moment.js"></script> --}} {{--
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js"></script> --}}
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script src="{{asset('js/jspdf.min.js')}}""></script>
+<script src="{{asset('js/html2canvas.js')}}"></script>
 @endsection
 
 
@@ -27,6 +29,7 @@
         background-color: RoyalBlue;
     }
 </style>
+
 
 @section('contents')
 
@@ -86,21 +89,40 @@
     <div id="plotid" class="container-fluid"></div>
     {{-- <button class="btn"><i class="fa fa-download"></i> Download</button> --}} {{-- <a href="{{ url('/graph/download' . $data . $layout) }}"
         class="btn btn-primary" role="button">Download Link</a> --}}
-    {{-- <img id="jpg-export"></img> --}}
+    <img id="jpg-export"></img>
+    <div><button type="button" class="btn btn-primary btn-lg" style="float: right;" onclick="print()">Save</button></div>
 
     <script>
         var data = {!!$data!!};
         var layout = {!!$layout!!}
         var myDiv = document.getElementById('plotid')
         Plotly.newPlot(myDiv, data, layout);
-
+        // print();
         // Plotly.relayout( myDiv, {
         //     'xaxis.autorange': true,
         //     'yaxis.autorange': true
         // });
+
+        function print() {
+            var timeStamp = '{{Carbon\Carbon::now()}}';
+            const filename  = 'report ' + timeStamp + '.pdf';
+            html2canvas(document.querySelector('#plotid')).then(canvas => {
+                let pdf = new jsPDF('l', 'cm', 'a3');
+                var width = pdf.internal.pageSize.getWidth();
+                var height = pdf.internal.pageSize.getHeight();
+                var h1 = 0;
+                var w1 = 0;
+                var widthImage = width - w1;
+                var heightImage = (canvas.height - w1) * width / canvas.width;
+                var h1 = (height - heightImage)/2 ;
+                pdf.addImage(canvas.toDataURL('image/png'), 'PNG', w1, h1, widthImage, heightImage);
+                pdf.save(filename);
+            });
+	    }
     </script>
 
-    {{-- <script>
+    {{--
+    <script>
         var d3 = Plotly.d3;
         var img_jpg= d3.select('#jpg-export');
 

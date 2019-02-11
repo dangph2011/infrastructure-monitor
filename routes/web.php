@@ -44,8 +44,14 @@ Route::get('problems/trigger/comments', 'TriggerController@comment');
 
 Route::post('problems/trigger/comments', 'TriggerController@comment');
 
-Route::get('/report', 'ReportController@view');
+// Route::get('/report', 'ReportController@view');
 
-Route::get('/report/create', 'ReportController@create');
+Route::resource('report', 'ReportController');
 
-Route::post('/report/create', 'ReportController@store');
+// Route::get('/report/create', 'ReportController@create');
+
+// Route::post('/report/create', 'ReportController@store');
+
+Route::get('/database/view', 'DatabaseController@view');
+
+Route::get('/database/create', 'DatabaseController@create');

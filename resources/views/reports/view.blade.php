@@ -6,7 +6,7 @@
 
 <div class="container-fluid">
     <div class="row">
-        <form method="GET" action="/report">
+        <form method="GET" action="/report/index">
             {{csrf_field()}}
             <div>
 

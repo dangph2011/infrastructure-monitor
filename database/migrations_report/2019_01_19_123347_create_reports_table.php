@@ -4,8 +4,9 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateReportTable extends Migration
+class CreateReportsTable extends Migration
 {
+    protected $connection = 'zabbix';
     /**
      * Run the migrations.
      *
@@ -16,8 +17,9 @@ class CreateReportTable extends Migration
         Schema::create('reports', function (Blueprint $table) {
             $table->engine = 'InnoDB';
             $table->bigIncrements('reportid');
-            $table->string('name', 255)->default('');
-            $table->string('schedule', 128)->default('* * * * *');
+            $table->text('name');
+            $table->text('description');
+            // $table->string('schedule', 128)->default('* * * * *');
             $table->timestamps();
         });
     }
