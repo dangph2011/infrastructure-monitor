@@ -65,8 +65,10 @@
         </form>
     </div>
 
+    <div style="text-align: center;"><button type="button" id="savePdf" class="btn btn-primary" onclick="generatePDF()">Generate PDF</button></div>
+    <div style="text-align: center;"><span id="genmsg" style="display:none; color:#0000FF;"><b>Generating PDF ...</b></span></div>
+
     <div id="plotid" class="container-fluid"></div>
-    <div><button type="button" class="btn btn-primary" style="float: right;" onclick="print()">Save</button></div>
 
     <script>
         var data = {!!$data!!};
@@ -79,10 +81,12 @@
         //     'yaxis.autorange': true
         // });
 
-        function print() {
+        function generatePDF() {
+            $("#savePdf").hide();
+		    $("#genmsg").show();
             var timeStamp = '{{Carbon\Carbon::now()}}';
             const filename  = 'report ' + timeStamp + '.pdf';
-            html2canvas(document.querySelector('#plotid')).then(canvas => {
+            html2canvas(document.querySelector('#plotid'), { allowTaint: true }).then(canvas => {
                 let pdf = new jsPDF('l', 'cm', 'a4');
                 var width = pdf.internal.pageSize.getWidth();
                 var height = pdf.internal.pageSize.getHeight();
@@ -92,7 +96,11 @@
                 var heightImage = (canvas.height - w1) * width / canvas.width;
                 var h1 = (height - heightImage)/2 ;
                 pdf.addImage(canvas.toDataURL('image/png'), 'PNG', w1, h1, widthImage, heightImage);
-                pdf.save(filename);
+                setTimeout(function() {
+                    pdf.save(filename);
+                    $("#savePdf").show();
+                    $("#genmsg").hide();
+                }, 0);
             });
 	    }
     </script>

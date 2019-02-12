@@ -40,7 +40,7 @@
     </div>
 
     <div class="row">
-        <div style="text-align: center;"><button type="button" onclick="window.location.href='/report/create'" class="btn btn-primary">Create</button></div>
+        <div style="text-align: center;"><button type="button" onclick="window.location.href='/report/create'" class="btn btn-primary">Create New Report</button></div>
     </div>
 </div>
 

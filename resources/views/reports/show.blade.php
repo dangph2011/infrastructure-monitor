@@ -41,12 +41,15 @@
         </table>
     </div>
 
+    <div class="row">
+        <div style="text-align: center;"><button type="button" id="savePdf" class="btn btn-primary" onclick="generatePDF()">Generate PDF</button></div>
+        <div style="text-align: center;"><span id="genmsg" style="display:none; color:#0000FF;"><b>Generating PDF ...</b></span></div>
+    </div>
+
     @for ($i = 0; $i < $reportData->count(); $i++)
         <div id="plotid{{$i}}" class="print-wrap page{{$i}}"></div>
     @endfor
 
-    <div><button type="button" id="savePdf" class="btn btn-primary" style="float: right;" onclick="generatePDF()">Save</button></div>
-    <span id="genmsg" style="display:none; float: right;"><b>Generating PDF ...</b></span>
 
 
     <script>
