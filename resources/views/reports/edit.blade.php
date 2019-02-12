@@ -147,8 +147,16 @@
     });
 
     $('select[name="hostid"]').on('change', function() {
-        var hostid = $(this).val();
+        var hostid = parseInt($(this).val());
+        console.log("hostid", JSON.stringify(hostid));
         if (hostid != 0) {
+            ajaxUpdateListView(hostid);
+        } else {
+            var hostid = new Array();
+            $("#hostid option").each(function()
+            {
+                hostid.push(parseInt($(this).val()));
+            });
             ajaxUpdateListView(hostid);
         }
     });
@@ -159,24 +167,24 @@
 
         $("#lstview option").each(function()
         {
-            from.push($(this).val());
+            from.push(parseInt($(this).val()));
         });
 
         $("#lstview_to option").each(function()
         {
-            to.push($(this).val());
+            to.push(parseInt($(this).val()));
         });
 
         //rebuild graph select option
         $.ajax({
             type: 'GET',
             url: '/ajax/graph',
-            data: {"hostid": hostid},
+            data: {"hostid": JSON.stringify(hostid)},
             dataType: 'json',
             success: function (data) {
                 $('select[name="from[]"]').empty();
                 $.each(data, function(key, graph) {
-                    if (!to.includes(graph.graphid.toString())) {
+                    if (!to.includes(graph.graphid)) {
                         $('select[name="from[]"]').append('<option value="'+ graph.graphid +'">'+ graph.name +'</option>');
                     }
                 });

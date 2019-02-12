@@ -26,8 +26,13 @@ class AjaxController extends Controller
     }
 
     public function ajaxGetGraphByGroupAndHost() {
-        $hostids = (int)request('hostid', 0);
-        $graphs = Graph::getGraphByGroupAndHost(collect([$hostids]));
+        $hostids = json_decode(request('hostid', 0));
+        if (is_array($hostids)) {
+            $graphs = Graph::getGraphByGroupAndHost($hostids);
+        } else {
+            $graphs = Graph::getGraphByGroupAndHost(collect([$hostids]));
+        }
+
         return $graphs;
     }
 }
