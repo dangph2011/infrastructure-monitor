@@ -39,4 +39,14 @@ class Host extends Model
         })->get();
         return $hosts;
     }
+
+    public static function getAllHost() {
+        $hosts = Host::where('status', 0)->WhereIn('flags', [0, 1])
+        ->whereHas('items', function ($query) {
+            $query->whereHas('graphs', function ($query) {
+                $query->whereIN('flags', [0, 4]);
+            });
+        })->get();
+        return $hosts;
+    }
 }

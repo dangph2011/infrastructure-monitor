@@ -48,6 +48,10 @@ Route::post('problems/trigger/comments', 'TriggerController@comment');
 
 Route::resource('report', 'ReportController');
 
+Route::get('/ajax/group', 'AjaxController@ajaxGetGroup');
+Route::get('/ajax/host', 'AjaxController@ajaxGetHostByGroupId');
+Route::get('/ajax/graph', 'AjaxController@ajaxGetGraphByGroupAndHost');
+
 // Route::get('/report/create', 'ReportController@create');
 
 // Route::post('/report/create', 'ReportController@store');

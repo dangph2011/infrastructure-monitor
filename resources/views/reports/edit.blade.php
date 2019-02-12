@@ -12,15 +12,14 @@
 
 <div class="container-fluid">
     <form method="POST" action="{{ route('report.update', $report->reportid) }}">
-        @method('PUT')
-        @csrf
+        @method('PUT') @csrf
         <div class="row">
             <div class='col-md-2'>
             </div>
             <div class='col-md-4'>
                 <div class="form-group">
                     <label for="">Nhóm</label>
-                    <select class="form-control" name="groupid" id="" onchange="this.form.submit()">
+                    <select class="form-control" name="groupid" id="groupid">
                             <option value=0>Tất cả</option>
                             @foreach($groups as $group)
                                 {{$rq_groupid}}
@@ -36,7 +35,7 @@
             <div class='col-md-4'>
                 <div class="form-group">
                     <label for="">Máy chủ</label>
-                    <select class="form-control" name="hostid" id="" onchange="this.form.submit()">
+                    <select class="form-control" name="hostid" id="hostid">
                             <option value=0>Tất cả</option>
                             @foreach($hosts as $host)
                                 @if ($host->hostid == $rq_hostid)
@@ -58,17 +57,17 @@
             <div class='col-md-6'>
 
                 <div class="form-group">
-                  <label for="name">Name*</label>
-                <input type="text" class="form-control" name="name" id="name" value="{{$report->name}}">
+                    <label for="name">Name*</label>
+                    <input type="text" class="form-control" name="name" id="name" value="{{$report->name}}">
                 </div>
 
                 <div class="form-group">
-                  <label for="description">Description</label>
-                  <input type="text" class="form-control" name="description" id="description" value="{{$report->description}}">
+                    <label for="description">Description</label>
+                    <input type="text" class="form-control" name="description" id="description" value="{{$report->description}}">
                 </div>
 
                 <div class="form-group">
-                  <label for="graph">Graph*</label>
+                    <label for="graph">Graph*</label>
                 </div>
 
             </div>
@@ -81,7 +80,7 @@
             </div>
             <div class='col-md-8'>
                 <div class="col-sm-5">
-                    <select name="from" id="lstview" class="form-control formcls" size="12" multiple="multiple">
+                    <select name="from[]" id="lstview" class="form-control formcls" size="12" multiple="multiple">
                         @foreach($graphFrom as $graph)
                             <option value="{{ $graph->graphid }}"> {{ $graph->name }}</option>
                         @endforeach
@@ -122,9 +121,72 @@
 <script src="js/multi-select/multiselect.js"></script> --}}
 
 <script>
-    jQuery(document).ready(function($) {
+    $(document).ready(function($) {
         $("#lstview").multiselect();
     });
+
+    $('select[name="groupid"]').on('change', function() {
+        var groupId = $(this).val();
+        //rebuild host select option
+        $.ajax({
+            type: 'GET',
+            url: '/ajax/host',
+            data: {"groupid": groupId},
+            dataType: 'json',
+            success: function (data) {
+                $('select[name="hostid"]').empty();
+                $('select[name="hostid"]').append('<option value="0">Tất cả</option>');
+                $.each(data, function(key, host) {
+                    $('select[name="hostid"]').append('<option value="'+ host.hostid +'">'+ host.name +'</option>');
+                });
+            },
+            error: function (error) {
+                console.log('Error:', error);
+            }
+        });
+    });
+
+    $('select[name="hostid"]').on('change', function() {
+        var hostid = $(this).val();
+        if (hostid != 0) {
+            ajaxUpdateListView(hostid);
+        }
+    });
+
+    function ajaxUpdateListView(hostid) {
+        var from = new Array();
+        var to = new Array();
+
+        $("#lstview option").each(function()
+        {
+            from.push($(this).val());
+        });
+
+        $("#lstview_to option").each(function()
+        {
+            to.push($(this).val());
+        });
+
+        //rebuild graph select option
+        $.ajax({
+            type: 'GET',
+            url: '/ajax/graph',
+            data: {"hostid": hostid},
+            dataType: 'json',
+            success: function (data) {
+                $('select[name="from[]"]').empty();
+                $.each(data, function(key, graph) {
+                    if (!to.includes(graph.graphid.toString())) {
+                        $('select[name="from[]"]').append('<option value="'+ graph.graphid +'">'+ graph.name +'</option>');
+                    }
+                });
+            },
+            error: function (error) {
+                console.log('Error:', error);
+            }
+        });
+    }
+
 </script>
 </div>
 @endsection
