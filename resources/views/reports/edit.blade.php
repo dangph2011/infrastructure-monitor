@@ -136,9 +136,14 @@
             success: function (data) {
                 $('select[name="hostid"]').empty();
                 $('select[name="hostid"]').append('<option value="0">Tất cả</option>');
+                var hostids = new Array();
                 $.each(data, function(key, host) {
                     $('select[name="hostid"]').append('<option value="'+ host.hostid +'">'+ host.name +'</option>');
+                    hostids.push(host.hostid);
                 });
+
+                //update list view after get group
+                ajaxUpdateListView(hostids)
             },
             error: function (error) {
                 console.log('Error:', error);
@@ -148,20 +153,19 @@
 
     $('select[name="hostid"]').on('change', function() {
         var hostid = parseInt($(this).val());
-        console.log("hostid", JSON.stringify(hostid));
         if (hostid != 0) {
             ajaxUpdateListView(hostid);
         } else {
-            var hostid = new Array();
+            var hostids = new Array();
             $("#hostid option").each(function()
             {
-                hostid.push(parseInt($(this).val()));
+                hostids.push(parseInt($(this).val()));
             });
-            ajaxUpdateListView(hostid);
+            ajaxUpdateListView(hostids);
         }
     });
 
-    function ajaxUpdateListView(hostid) {
+    function ajaxUpdateListView(hostids) {
         var from = new Array();
         var to = new Array();
 
@@ -179,7 +183,7 @@
         $.ajax({
             type: 'GET',
             url: '/ajax/graph',
-            data: {"hostid": JSON.stringify(hostid)},
+            data: {"hostid": JSON.stringify(hostids)},
             dataType: 'json',
             success: function (data) {
                 $('select[name="from[]"]').empty();
