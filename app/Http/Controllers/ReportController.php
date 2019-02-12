@@ -66,7 +66,7 @@ class ReportController extends Controller
         }
 
         //get graphs based on selected group and host
-        $graphs = Graph::getGraphByGroupAndHost($groupids, $hostids);
+        $graphs = Graph::getGraphByGroupAndHost($hostids);
 
         return view('reports.create', compact('rq_groupid', 'rq_hostid', 'hosts', 'groups', 'graphs'));
     }
@@ -174,7 +174,7 @@ class ReportController extends Controller
         }
 
         //get graphs based on selected group and host
-        $graphs = Graph::getGraphByGroupAndHost($groupids, $hostids);
+        $graphs = Graph::getGraphByGroupAndHost($hostids);
 
         $graphFrom = collect();
         $graphTo = $graphsReport;

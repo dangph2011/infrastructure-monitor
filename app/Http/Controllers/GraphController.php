@@ -48,7 +48,7 @@ class GraphController extends Controller
         }
 
         //get graphs based on selected group and host
-        $graphs = Graph::getGraphByGroupAndHost($groupids, $hostids);
+        $graphs = Graph::getGraphByGroupAndHost($hostids);
 
         //get items based on selected graph
 
