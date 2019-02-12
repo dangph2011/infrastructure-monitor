@@ -83,7 +83,7 @@
             var timeStamp = '{{Carbon\Carbon::now()}}';
             const filename  = 'report ' + timeStamp + '.pdf';
             html2canvas(document.querySelector('#plotid')).then(canvas => {
-                let pdf = new jsPDF('l', 'cm', 'a3');
+                let pdf = new jsPDF('l', 'cm', 'a4');
                 var width = pdf.internal.pageSize.getWidth();
                 var height = pdf.internal.pageSize.getHeight();
                 var h1 = 0;
