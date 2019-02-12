@@ -19,6 +19,7 @@
                     <th>Name</th>
                     <th>Description</th>
                     <th>Created at</th>
+                    <th width="25%">Action</th>
                 </tr>
             </thead>
             <tbody>
@@ -27,6 +28,14 @@
                     <td>{{$report->name}}</td>
                     <td>{{$report->description}}</td>
                     <td>{{$report->created_at}}</td>
+                    <td>
+                        <a href="{{ route('report.edit', $report->reportid) }}" class="btn btn-info" style="margin-right: 3px;">Edit</a>
+                        <button form="delete-report-form-{{$report->reportid}}" type="submit" class="btn btn-danger" style="margin-right: 3px;">Delete</button>
+                        <form id="delete-report-form-{{$report->reportid}}" class="delete-report" action="/report/{{$report->reportid}}" method="POST" onsubmit="return confirm('Do you want to delete this report id: {{$report->reportid}}?');">
+                            {{ csrf_field() }}
+                            <input type="hidden" name="_method" value="DELETE">
+                        </form>
+                    </td>
                 </tr>
             </tbody>
         </table>
