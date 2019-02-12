@@ -19,4 +19,19 @@ class Graph extends Model
     {
         return $this->belongsToMany(Item::class, 'graphs_items', 'graphid', 'itemid')->withPivot('type');
     }
+
+    public static function getGraphByGroupAndHost($groupids, $hostids)
+    {
+        //get graphs based on selected group and host
+        $graphs = Graph::whereIn('flags', [0, 4])
+            ->whereHas('items', function ($query) use ($hostids, $groupids) {
+                $query->whereHas('host', function ($query) use ($hostids, $groupids) {
+                    $query->where('status', 0)->whereIn('hosts.hostid', $hostids)
+                        ->whereHas('groups', function ($query) use ($groupids) {
+                            $query->whereIn('groups.groupid', $groupids);
+                        });
+                });
+            })->orderBy('name')->get();
+        return $graphs;
+    }
 }

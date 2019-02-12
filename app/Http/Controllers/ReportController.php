@@ -35,17 +35,11 @@ class ReportController extends Controller
      */
     public function create()
     {
-        $groupid = collect();
-        $hostid = collect();
+        $groupids = collect();
+        $hostids = collect();
         // $graphid = 0;
 
-        $groups = Group::whereHas('hosts', function ($query) {
-            $query->where('status', 0)->whereHas('items', function ($query) {
-                $query->whereIN('flags', [0, 4])->whereHas('graphs', function ($query) {
-                    $query->whereIN('flags', [0, 4]);
-                });
-            });
-        })->get();
+        $groups = Group::getGroup();
 
         //Get groupId request
         $rq_groupid = request('groupid', 0);
@@ -53,42 +47,26 @@ class ReportController extends Controller
         // $rq_graphid = request('graphid', 0);
 
         if ($rq_groupid == 0) {
-            $groups->each(function ($group) use ($groupid) {
-                $groupid->push($group->groupid);
+            $groups->each(function ($group) use ($groupids) {
+                $groupids->push($group->groupid);
             });
         } else {
-            $groupid->push($rq_groupid);
+            $groupids->push($rq_groupid);
         }
 
         //get hosts based on selected group
-        $hosts = Host::where('status', 0)->WhereIn('flags', [0, 1])
-            ->whereHas('groups', function ($query) use ($groupid) {
-                $query->whereIn('groups.groupid', $groupid);
-            })
-            ->whereHas('items', function ($query) {
-                $query->whereHas('graphs', function ($query) {
-                    $query->whereIN('flags', [0, 4]);
-                });
-            })->get();
+        $hosts = Host::getHostByGroupIds($groupids);
 
         if ($rq_hostid == 0) {
-            $hosts->each(function ($host) use ($hostid) {
-                $hostid->push($host->hostid);
+            $hosts->each(function ($host) use ($hostids) {
+                $hostids->push($host->hostid);
             });
         } else {
-            $hostid->push($rq_hostid);
+            $hostids->push($rq_hostid);
         }
 
         //get graphs based on selected group and host
-        $graphs = Graph::whereIn('flags', [0, 4])
-            ->whereHas('items', function ($query) use ($hostid, $groupid) {
-                $query->whereHas('host', function ($query) use ($hostid, $groupid) {
-                    $query->where('status', 0)->whereIn('hosts.hostid', $hostid)
-                        ->whereHas('groups', function ($query) use ($groupid) {
-                            $query->whereIn('groups.groupid', $groupid);
-                        });
-                });
-            })->orderBy('name')->get();
+        $graphs = Graph::getGraphByGroupAndHost($groupids, $hostids);
 
         return view('reports.create', compact('rq_groupid', 'rq_hostid', 'hosts', 'groups', 'graphs'));
     }
@@ -165,17 +143,11 @@ class ReportController extends Controller
             $graphsReportId->push($gr->graphid);
         }
 
-        $groupid = collect();
-        $hostid = collect();
+        $groupids = collect();
+        $hostids = collect();
         // $graphid = 0;
 
-        $groups = Group::whereHas('hosts', function ($query) {
-            $query->where('status', 0)->whereHas('items', function ($query) {
-                $query->whereIN('flags', [0, 4])->whereHas('graphs', function ($query) {
-                    $query->whereIN('flags', [0, 4]);
-                });
-            });
-        })->get();
+        $groups = Group::getGroup();
 
         //Get groupId request
         $rq_groupid = request('groupid', 0);
@@ -183,42 +155,26 @@ class ReportController extends Controller
         // $rq_graphid = request('graphid', 0);
 
         if ($rq_groupid == 0) {
-            $groups->each(function ($group) use ($groupid) {
-                $groupid->push($group->groupid);
+            $groups->each(function ($group) use ($groupids) {
+                $groupids->push($group->groupid);
             });
         } else {
-            $groupid->push($rq_groupid);
+            $groupids->push($rq_groupid);
         }
 
         //get hosts based on selected group
-        $hosts = Host::where('status', 0)->WhereIn('flags', [0, 1])
-            ->whereHas('groups', function ($query) use ($groupid) {
-                $query->whereIn('groups.groupid', $groupid);
-            })
-            ->whereHas('items', function ($query) {
-                $query->whereHas('graphs', function ($query) {
-                    $query->whereIN('flags', [0, 4]);
-                });
-            })->get();
+        $hosts = Host::getHostByGroupIds($groupids);
 
         if ($rq_hostid == 0) {
-            $hosts->each(function ($host) use ($hostid) {
-                $hostid->push($host->hostid);
+            $hosts->each(function ($host) use ($hostids) {
+                $hostids->push($host->hostid);
             });
         } else {
-            $hostid->push($rq_hostid);
+            $hostids->push($rq_hostid);
         }
 
         //get graphs based on selected group and host
-        $graphs = Graph::whereIn('flags', [0, 4])
-            ->whereHas('items', function ($query) use ($hostid, $groupid) {
-                $query->whereHas('host', function ($query) use ($hostid, $groupid) {
-                    $query->where('status', 0)->whereIn('hosts.hostid', $hostid)
-                        ->whereHas('groups', function ($query) use ($groupid) {
-                            $query->whereIn('groups.groupid', $groupid);
-                        });
-                });
-            })->orderBy('name')->get();
+        $graphs = Graph::getGraphByGroupAndHost($groupids, $hostids);
 
         $graphFrom = collect();
         $graphTo = $graphsReport;

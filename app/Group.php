@@ -19,4 +19,16 @@ class Group extends Model
     {
         return $this->belongsToMany(Host::class, 'hosts_groups', 'groupid', 'hostid');
     }
+
+    public static function getGroup()
+    {
+        $groups = Group::whereHas('hosts', function ($query) {
+            $query->where('status', 0)->whereHas('items', function ($query) {
+                $query->whereIN('flags', [0, 4])->whereHas('graphs', function ($query) {
+                    $query->whereIN('flags', [0, 4]);
+                });
+            });
+        })->get();
+        return $groups;
+    }
 }
