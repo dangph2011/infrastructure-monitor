@@ -157,7 +157,79 @@ class ReportController extends Controller
     public function edit($id)
     {
         $report = Report::find($id);
-        return view('reports.show', compact('report'));
+        $graphsReport = $report->graphs;
+
+        $graphsReportId = collect();
+
+        foreach ($graphsReport as $gr) {
+            $graphsReportId->push($gr->graphid);
+        }
+
+        $groupid = collect();
+        $hostid = collect();
+        // $graphid = 0;
+
+        $groups = Group::whereHas('hosts', function ($query) {
+            $query->where('status', 0)->whereHas('items', function ($query) {
+                $query->whereIN('flags', [0, 4])->whereHas('graphs', function ($query) {
+                    $query->whereIN('flags', [0, 4]);
+                });
+            });
+        })->get();
+
+        //Get groupId request
+        $rq_groupid = request('groupid', 0);
+        $rq_hostid = request('hostid', 0);
+        // $rq_graphid = request('graphid', 0);
+
+        if ($rq_groupid == 0) {
+            $groups->each(function ($group) use ($groupid) {
+                $groupid->push($group->groupid);
+            });
+        } else {
+            $groupid->push($rq_groupid);
+        }
+
+        //get hosts based on selected group
+        $hosts = Host::where('status', 0)->WhereIn('flags', [0, 1])
+            ->whereHas('groups', function ($query) use ($groupid) {
+                $query->whereIn('groups.groupid', $groupid);
+            })
+            ->whereHas('items', function ($query) {
+                $query->whereHas('graphs', function ($query) {
+                    $query->whereIN('flags', [0, 4]);
+                });
+            })->get();
+
+        if ($rq_hostid == 0) {
+            $hosts->each(function ($host) use ($hostid) {
+                $hostid->push($host->hostid);
+            });
+        } else {
+            $hostid->push($rq_hostid);
+        }
+
+        //get graphs based on selected group and host
+        $graphs = Graph::whereIn('flags', [0, 4])
+            ->whereHas('items', function ($query) use ($hostid, $groupid) {
+                $query->whereHas('host', function ($query) use ($hostid, $groupid) {
+                    $query->where('status', 0)->whereIn('hosts.hostid', $hostid)
+                        ->whereHas('groups', function ($query) use ($groupid) {
+                            $query->whereIn('groups.groupid', $groupid);
+                        });
+                });
+            })->orderBy('name')->get();
+
+        $graphFrom = collect();
+        $graphTo = $graphsReport;
+
+        for ($i = 0; $i < $graphs->count(); $i++) {
+            if (!$graphsReportId->contains($graphs[$i]->graphid)) {
+                $graphFrom->push($graphs[$i]);
+            }
+        }
+
+        return view('reports.edit', compact('rq_groupid', 'rq_hostid', 'hosts', 'groups', 'report', 'graphFrom', 'graphTo'));
     }
 
     /**
@@ -169,7 +241,29 @@ class ReportController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        print_r("update");
+        $this->validate(request(), [
+            'name' => 'required',
+            'to' => 'required',
+        ]);
+
+        $reListView = request('to', 0);
+        $description = request('description', '');
+
+        if ($reListView != 0) {
+            $report = Report::find($id);
+            $report->name = request('name');
+            $report->description = $description;
+            $report->save();
+            //
+            $graphids = collect();
+
+            foreach ($reListView as $key => $value) {
+                $graphids->push($value);
+            }
+            $report->saveReport($graphids);
+        }
+        return redirect('/report');
     }
 
     /**

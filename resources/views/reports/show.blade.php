@@ -64,42 +64,40 @@
             width = pdf.internal.pageSize.getWidth();
             height = pdf.internal.pageSize.getHeight();
 
+            var timeStamp = '{{Carbon\Carbon::now()}}';
+            const filename  = 'report ' + timeStamp + '.pdf';
             @for ($i = 0; $i < $reportData->count(); $i++)
                 @if ($i == 0 && $i == ($reportData->count() - 1))
-                    html2canvas($(".print-wrap:eq(0)")[0], { allowTaint: false }).then(function(canvas) {
+                    html2canvas($(".print-wrap:eq(0)")[0], { allowTaint: true }).then(function(canvas) {
                         calculatePDF_height_width(".print-wrap",0);
                         var imgData = canvas.toDataURL("image/png", 1.0);
                         pdf.addImage(imgData, 'PNG', w1, h1, HTML_Width, HTML_Height);
                         setTimeout(function() {
-                            var timeStamp = '{{Carbon\Carbon::now()}}';
-                            const filename  = 'report ' + timeStamp + '.pdf';
                             pdf.save(filename);
                             $("#savePdf").show();
                             $("#genmsg").hide();
                         }, 0);
                     });
                 @elseif ($i == 0)
-                    html2canvas($(".print-wrap:eq(0)")[0], { allowTaint: false }).then(function(canvas) {
+                    html2canvas($(".print-wrap:eq(0)")[0], { allowTaint: true }).then(function(canvas) {
                         calculatePDF_height_width(".print-wrap",0);
                         var imgData = canvas.toDataURL("image/png", 1.0);
                         pdf.addImage(imgData, 'PNG', w1, h1, HTML_Width, HTML_Height);
                     });
                 @elseif ($i == ($reportData->count() - 1))
-                    html2canvas($(".print-wrap:eq({{$i}})")[0], { allowTaint: false }).then(function(canvas) {
+                    html2canvas($(".print-wrap:eq({{$i}})")[0], { allowTaint: true }).then(function(canvas) {
                         calculatePDF_height_width(".print-wrap",{{$i}});
                         var imgData = canvas.toDataURL("image/png", 1.0);
                         pdf.addPage(width, height);
                         pdf.addImage(imgData, 'PNG', w1, h1, HTML_Width, HTML_Height);
                         setTimeout(function() {
-                            var timeStamp = '{{Carbon\Carbon::now()}}';
-                            const filename  = 'report ' + timeStamp + '.pdf';
                             pdf.save(filename);
                             $("#savePdf").show();
                             $("#genmsg").hide();
                         }, 0);
                     });
                 @else
-                    html2canvas($(".print-wrap:eq({{$i}})")[0], { allowTaint: false }).then(function(canvas) {
+                    html2canvas($(".print-wrap:eq({{$i}})")[0], { allowTaint: true }).then(function(canvas) {
                         calculatePDF_height_width(".print-wrap",{{$i}});
                         var imgData = canvas.toDataURL("image/png", 1.0);
                         pdf.addPage(width, height);
@@ -107,7 +105,7 @@
                     });
                 @endif
             @endfor
-        };
+        }
 
         @for ($i = 0; $i < $reportData->count(); $i++)
             var data = {!!$reportData[$i]['data']!!};
