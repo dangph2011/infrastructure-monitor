@@ -1,7 +1,5 @@
 <?php
 
-use App\Http\Controllers\GraphController;
-
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -55,7 +53,7 @@ Route::get('/ajax/graph', 'AjaxController@ajaxGetGraphByGroupAndHost');
 // Route::get('/report/create', 'ReportController@create');
 
 // Route::post('/report/create', 'ReportController@store');
+Route::get('replication/history', 'ReplicationController@history');
+Route::resource('replication', 'ReplicationController');
+Route::resource('dump', 'DumpHistoryController');
 
-Route::get('/database/view', 'DatabaseController@view');
-
-Route::get('/database/create', 'DatabaseController@create');
