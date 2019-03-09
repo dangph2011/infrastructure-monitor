@@ -1,8 +1,10 @@
 @extends('layouts.main')
-@section('page-header') Report Page
+@section('page-header') Replication
 @endsection
 
 @section('contents')
+
+
 
 <div class="container-fluid">
     <div class="row">
@@ -10,10 +12,12 @@
             <thead>
                 <tr>
                     <th>#</th>
-                    <th>Name</th>
-                    <th>Description</th>
+                    <th>Channel</th>
+                    <th>Filename</th>
+                    <th>Log file</th>
+                    <th>Log pos</th>
+                    <th>Log text</th>
                     <th>Created at</th>
-                    <th width="25%">Action</th>
                 </tr>
             </thead>
             <tbody>
@@ -43,21 +47,5 @@
         <div style="text-align: center;"><button type="button" onclick="window.location.href='/report/create'" class="btn btn-primary">Create New Report</button></div>
     </div>
 </div>
-
-<style>
-    .cell-click {
-        cursor: pointer;
-    }
-</style>
-
-
-<script>
-    $(document).ready(function($) {
-        $('.cell-click').click(function(){
-            $reportid = $(this).parent().find('td:nth-child(2)').text();
-            window.location.href = '/report/' + $reportid;
-        });
-    });
-</script>
 
 @endsection

@@ -23,13 +23,7 @@ class TriggerController extends Controller
         $triggers = collect();
         // $graphid = 0;
 
-        $groups = Group::whereHas('hosts', function ($query) {
-            $query->where('status', 0)->whereHas('items', function ($query) {
-                $query->whereIN('flags', [0, 4])->whereHas('graphs', function ($query) {
-                    $query->whereIN('flags', [0, 4]);
-                });
-            });
-        })->get();
+        $groups = Group::getGroup();
 
         //Get groupId request
         $rq_groupid = request('groupid', 0);
@@ -45,15 +39,8 @@ class TriggerController extends Controller
         }
 
         //get hosts based on selected group
-        $hosts = Host::where('status', 0)->WhereIn('flags', [0, 1])
-            ->whereHas('groups', function ($query) use ($groupid) {
-                $query->whereIn('groups.groupid', $groupid);
-            })
-            ->whereHas('items', function ($query) {
-                $query->whereHas('graphs', function ($query) {
-                    $query->whereIN('flags', [0, 4]);
-                });
-            })->get();
+
+        $hosts = Host::getHostByGroupIds($groupid);
 
         if ($rq_hostid == 0) {
             $hosts->each(function ($host) use ($hostid) {
@@ -113,15 +100,7 @@ class TriggerController extends Controller
         }
 
         //get hosts based on selected group
-        $hosts = Host::where('status', 0)->WhereIn('flags', [0, 1])
-            ->whereHas('groups', function ($query) use ($groupid) {
-                $query->whereIn('groups.groupid', $groupid);
-            })
-            ->whereHas('items', function ($query) {
-                $query->whereHas('graphs', function ($query) {
-                    $query->whereIN('flags', [0, 4]);
-                });
-            })->get();
+        $hosts = Host::getHostByGroupIds($groupid);
 
         if ($rq_hostid == 0) {
             $hosts->each(function ($host) use ($hostid) {

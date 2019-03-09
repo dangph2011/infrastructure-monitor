@@ -40,14 +40,27 @@
     </li>
 
     <li class="treeview">
-        <a href="#"><i class="fa fa-plug"></i> <span>Database</span>
+        <a href="#"><i class="fa fa-plug"></i> <span>Replication</span>
                     <span class="pull-right-container">
                     <i class="fa fa-angle-left pull-right"></i>
                     </span>
                     </a>
         <ul class="treeview-menu">
-            <li><a href="/database/view">View</a></li>
-            <li><a href="/database/create">Create</a></li>
+            <li><a href="/replication">View</a></li>
+            <li><a href="/replication/create">Create</a></li>
+            <li><a href="/replication/history">History</a></li>
+        </ul>
+    </li>
+
+    <li class="treeview">
+        <a href="#"><i class="fa fa-plug"></i> <span>Dump</span>
+                    <span class="pull-right-container">
+                    <i class="fa fa-angle-left pull-right"></i>
+                    </span>
+                    </a>
+        <ul class="treeview-menu">
+            <li><a href="/dump">View</a></li>
+            <li><a href="/dump/create">Create</a></li>
         </ul>
     </li>
 
