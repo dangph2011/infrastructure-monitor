@@ -8,8 +8,10 @@ class Group extends Model
 {
     //
     // protected $table = 'groups';
+    protected $table = 'hstgrp';
     protected $primaryKey = 'groupid';
     protected $connection = 'zabbix';
+
     public function hostsGroups()
     {
         return $this->hasMany(HostsGroup::class, 'groupid', 'groupid');

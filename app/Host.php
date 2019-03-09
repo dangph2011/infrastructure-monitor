@@ -30,7 +30,7 @@ class Host extends Model
         //get hosts based on selected group
         $hosts = Host::where('status', 0)->WhereIn('flags', [0, 1])
         ->whereHas('groups', function ($query) use ($groupids) {
-            $query->whereIn('groups.groupid', $groupids);
+            $query->whereIn('hstgrp.groupid', $groupids);
         })
         ->whereHas('items', function ($query) {
             $query->whereHas('graphs', function ($query) {
