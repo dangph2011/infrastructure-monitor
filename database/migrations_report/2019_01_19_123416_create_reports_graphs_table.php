@@ -33,6 +33,8 @@ class CreateReportsGraphsTable extends Migration
                 ->references('graphid')->on('graphs')
                 ->onDelete('restrict')
                 ->onUpdate('cascade');
+
+            $table->timestamps();
         });
     }
 
