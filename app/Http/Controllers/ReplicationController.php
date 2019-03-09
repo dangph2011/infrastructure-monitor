@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 
 class ReplicationController extends Controller
 {
+    private $pagination = 3;
 
     public function __construct()
     {
@@ -27,14 +28,16 @@ class ReplicationController extends Controller
      */
     public function index()
     {
-        $replogs = ReplicationLog::all();
-        return view('replications.index', compact('replogs'));
+        $replogs = ReplicationLog::paginate($this->pagination);
+        $pagination = $this->pagination;
+        return view('replications.index', compact('replogs', 'pagination'));
     }
 
     public function history()
     {
-        $repls = Replication::all();
-        return view('replications.history', compact('repls'));
+        $repls = Replication::paginate($this->pagination);
+        $pagination = $this->pagination;
+        return view('replications.history', compact('repls', 'pagination'));
     }
 
     /**
@@ -67,6 +70,10 @@ class ReplicationController extends Controller
             'channel' => 'required'
         ]);
 
+        $errors = collect();
+
+
+
         $host = request('host', "");
         $port = request('port', "");
         $user = request('user', "");
@@ -79,6 +86,11 @@ class ReplicationController extends Controller
         $host_local = env('DB_HOST', '127.0.0.1');
         $port_local = env('DB_PORT', '3306');
         $channel = request('channel', "");
+
+
+        if ($errors->count() > 0) {
+            return Redirect::back()->withErrors($errors);
+        }
 
         // dd($host, $user, $password, $client_name, $server_name);
         $exe = 'sh script/replication_binlog.sh ' . $host .' '. $port .' '.$user . ' ' . $password . ' '

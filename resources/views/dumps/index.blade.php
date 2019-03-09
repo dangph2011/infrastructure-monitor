@@ -22,7 +22,7 @@
             <tbody>
                 @foreach ($dumps as $key => $value)
                 <tr>
-                    <td class="cell-click">{{(($dumps->currentPage()-1)*$currentPage)+$key+1}}</td>
+                    <td class="cell-click">{{(($dumps->currentPage()-1)*$pagination)+$key+1}}</td>
                     <td class="cell-click">{{$value->host}}</td>
                     <td class="cell-click">{{$value->database}}</td>
                     <td class="cell-click">{{$value->log_file}}</td>

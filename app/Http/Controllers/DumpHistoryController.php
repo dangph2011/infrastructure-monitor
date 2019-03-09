@@ -8,20 +8,24 @@ use Symfony\Component\Process\Process;
 
 class DumpHistoryController extends Controller
 {
+    private $pagination = 3;
+
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+
     /**
      * Display a listing of the resource.
      *
      * @return \Illuminate\Http\Response
      */
-
-    private $pagination = 3;
-
     public function index()
     {
 
         $dumps = DumpHistory::paginate($this->pagination);
-        $currentPage = $this->pagination;
-        return view('dumps.index', compact('dumps', 'currentPage'));
+        $pagination = $this->pagination;
+        return view('dumps.index', compact('dumps', 'pagination'));
         //
     }
 

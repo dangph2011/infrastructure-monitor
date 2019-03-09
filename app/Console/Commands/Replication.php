@@ -42,6 +42,23 @@ class Replication extends Command
         //
         $replConfs = DB::connection('performance')->table('replication_connection_configuration')->get();
         $replStatuses = DB::connection('performance')->table('replication_connection_status')->get();
+        $newChannelName = collect();
+        $oldChannelName = collect();
+        foreach ($replConfs as $v) {
+            $newChannelName->push($v->CHANNEL_NAME);
+        }
+
+        $replLog = ReplicationLog::all();
+
+        foreach ($replLog as $v) {
+            $oldChannelName->push($v->CHANNEL_NAME);
+        }
+
+        $deleteChannel = $oldChannelName->diff($newChannelName);
+
+        if ($deleteChannel->count() > 0) {
+            ReplicationLog::destroy($deleteChannel);
+        }
 
         foreach ($replConfs as $v) {
             ReplicationLog::updateOrCreate(

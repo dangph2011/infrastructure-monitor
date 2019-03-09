@@ -23,7 +23,7 @@
             <tbody>
                 @foreach ($replogs as $key => $value)
                 <tr>
-                    <td class="cell-click">{{$key+1}}</td>
+                    <td class="cell-click">{{(($replogs->currentPage()-1)*$pagination)+$key+1}}</td>
                     <td class="cell-click">{{$value->CHANNEL_NAME}}</td>
                     <td class="cell-click">{{$value->SERVICE_STATE}}</td>
                     <td class="cell-click">{{$value->LAST_ERROR_MESSAGE}}</td>
@@ -37,6 +37,8 @@
             </tbody>
         </table>
     </div>
+
+    <div style="text-align: center;"><?php echo $replogs->render(); ?></div>
 
     {{-- <div class="row">
         <div style="text-align: center;"><button type="button" onclick="window.location.href='/report/create'" class="btn btn-primary">Create New Report</button></div>

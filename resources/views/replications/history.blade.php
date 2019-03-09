@@ -24,7 +24,7 @@
             <tbody>
                 @foreach ($repls as $key => $value)
                 <tr>
-                    <td class="cell-click">{{$key+1}}</td>
+                    <td class="cell-click">{{(($repls->currentPage()-1)*$pagination)+$key+1}}</td>
                     <td class="cell-click">{{$value->name}}</td>
                     <td class="cell-click">{{$value->description}}</td>
                     <td class="cell-click">{{$value->host}}</td>
@@ -39,7 +39,7 @@
             </tbody>
         </table>
     </div>
-
+    <div style="text-align: center;"><?php echo $repls->render(); ?></div>
     {{-- <div class="row">
         <div style="text-align: center;"><button type="button" onclick="window.location.href='/report/create'" class="btn btn-primary">Create New Report</button></div>
     </div> --}}
