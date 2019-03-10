@@ -56,4 +56,5 @@ Route::get('/ajax/graph', 'AjaxController@ajaxGetGraphByGroupAndHost');
 Route::get('replication/history', 'ReplicationController@history');
 Route::resource('replication', 'ReplicationController');
 Route::resource('dump', 'DumpHistoryController');
+Route::resource('local', 'LocalServerController');
 

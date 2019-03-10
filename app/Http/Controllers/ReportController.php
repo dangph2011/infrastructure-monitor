@@ -197,7 +197,6 @@ class ReportController extends Controller
      */
     public function update(Request $request, $id)
     {
-        print_r("update");
         $this->validate(request(), [
             'name' => 'required',
             'to' => 'required',

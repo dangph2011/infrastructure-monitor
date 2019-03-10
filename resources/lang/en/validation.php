@@ -142,5 +142,6 @@ return [
     */
 
     'attributes' => [],
+    'without_spaces'             => 'The :attribute field does not contain spaces.',
 
 ];

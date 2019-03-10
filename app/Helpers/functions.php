@@ -220,3 +220,9 @@ function getClockAndValueNumericData($itemid, $data_type, $table = 'history', $m
     }
     return collect([$xData, $yData]);
 }
+
+function getLocalServerSchema() {
+    $schemas = DB::connection('information')->table('schemata')->where('SCHEMA_NAME', 'like', '%'.'zabbix'.'%')->get();
+    return $schemas;
+}
+
