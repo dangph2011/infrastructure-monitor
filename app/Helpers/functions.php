@@ -1,5 +1,7 @@
 <?php
 
+use League\Flysystem\Config;
+
 function getSelectorOption($options)
 {
     $selector = collect();
@@ -225,4 +227,23 @@ function getLocalServerSchema() {
     $schemas = DB::connection('information')->table('schemata')->where('SCHEMA_NAME', 'like', '%'.'zabbix'.'%')->get();
     return $schemas;
 }
+
+function createDatabaseConnection($key, $driver, $host, $port, $database, $username, $password, $charset = 'utf8mb4', $collation='utf8mb4_unicode_ci', $engine = null) {
+    $config = Config::get('database.connections.' . $key);
+    $config['driver'] = $driver;
+    $config['host'] = $host;
+    $config['port'] = $port;
+    $config['database'] = $database;
+    $config['username'] = $username;
+    $config['password'] = $password;
+    $config['charset'] = $charset;
+    $config['collation'] = $collation;
+    $config['engine'] = $engine;
+    Config::set('database.connections.' . $key, $config);
+}
+
+function purgeDatabaseConnection($name = null) {
+    DB::purge($name);
+}
+
 
