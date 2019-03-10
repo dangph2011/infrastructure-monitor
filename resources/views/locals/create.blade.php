@@ -51,7 +51,7 @@
                         </div>
                     </div>
                 </div>
-            <br>
+            </div>
             <div style="text-align: center;"><button type="submit" class="btn btn-primary">Lưu</button></div>
         </form>
     </div>
