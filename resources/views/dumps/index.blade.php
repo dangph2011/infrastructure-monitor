@@ -1,5 +1,5 @@
 @extends('layouts.main')
-@section('page-header') Bản sao CSDL
+@section('page-header') {{__('Dump Database')}}
 @endsection
 
 @section('contents')
@@ -10,13 +10,13 @@
             <thead>
                 <tr>
                     <th>#</th>
-                    <th>Host</th>
-                    <th>Database</th>
-                    <th>Log file</th>
-                    <th>Log pos</th>
-                    <th>Filename</th>
-                    <th>Log text</th>
-                    <th>Created at</th>
+                    <th>{{__('Host')}}</th>
+                    <th>{{__('Database')}}</th>
+                    <th>{{__('Log File')}}</th>
+                    <th>{{__('Log Pos')}}</th>
+                    <th>{{__('Filename')}}</th>
+                    <th>{{__('Log text')}}</th>
+                    <th>{{__('Created at')}}</th>
                 </tr>
             </thead>
             <tbody>

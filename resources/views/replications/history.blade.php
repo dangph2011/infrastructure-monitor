@@ -10,15 +10,15 @@
             <thead>
                 <tr>
                     <th>#</th>
-                    <th>Name</th>
-                    <th>Description</th>
-                    <th>Host</th>
-                    <th>User</th>
-                    <th>Channel</th>
-                    <th>State</th>
-                    <th>Error</th>
-                    <th>Log text</th>
-                    <th>Created at</th>
+                    <th>{{__('Name')}}</th>
+                    <th>{{__('Description')}}</th>
+                    <th>{{__('Host')}}</th>
+                    <th>{{__('User')}}</th>
+                    <th>{{__('Channel Name')}}</th>
+                    <th>{{__('State')}}</th>
+                    <th>{{__('Error')}}</th>
+                    <th>{{__('Log text')}}</th>
+                    <th>{{__('Created at')}}</th>
                 </tr>
             </thead>
             <tbody>

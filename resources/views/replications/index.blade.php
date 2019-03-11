@@ -1,5 +1,5 @@
 @extends('layouts.main')
-@section('page-header') Bản sao CSDL
+@section('page-header') {{__('Replication')}}
 @endsection
 
 @section('contents')
@@ -10,14 +10,14 @@
             <thead>
                 <tr>
                     <th>#</th>
-                    <th>Channel Name</th>
-                    <th>Service State</th>
-                    <th>Last Error Message</th>
-                    <th>Host</th>
-                    <th>Port</th>
-                    <th>User</th>
-                    <th>Created at</th>
-                    <th>Updated at</th>
+                    <th>{{__('Channel Name')}}</th>
+                    <th>{{__('Service State')}}</th>
+                    <th>{{__('Last Error Message')}}</th>
+                    <th>{{__('Host')}}</th>
+                    <th>{{__('Port')}}</th>
+                    <th>{{__('Slave User')}}</th>
+                    <th>{{__('Created at')}}</th>
+                    <th>{{__('Updated at')}}</th>
                 </tr>
             </thead>
             <tbody>
@@ -53,6 +53,5 @@
         });
     });
 </script>
-
 
 @endsection

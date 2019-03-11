@@ -18,7 +18,7 @@
             {{csrf_field()}}
             <div class='col-md-3'>
                 <div class="form-group">
-                    <label for="">Máy chủ khu vực</label>
+                    <label for="">{{__('Local Server')}}</label>
                     <select class="form-control" name="localid" id="localid" onchange="this.form.submit()">
                     @foreach($localServers as $localServer)
                         @if ($localServer->id == $requestLocalId)
@@ -32,9 +32,9 @@
             </div>
             <div class='col-md-3'>
                 <div class="form-group">
-                    <label for="">Nhóm</label>
+                    <label for="">{{__('Group')}}</label>
                     <select class="form-control" name="groupid" id="" onchange="this.form.submit()">
-                    <option value=0>Tất cả</option>
+                    <option value=0>{{__('All')}}</option>
                     @foreach($groups as $group)
                         {{-- {{$rq_groupid}} --}}
                         @if ($group->groupid == $rq_groupid)
@@ -48,9 +48,9 @@
             </div>
             <div class='col-md-3'>
                 <div class="form-group">
-                    <label for="">Máy chủ</label>
+                    <label for="">{{__('Host')}}</label>
                     <select class="form-control" name="hostid" id="" onchange="this.form.submit()">
-                    <option value=0>Tất cả</option>
+                    <option value=0>{{__('All')}}</option>
                     @foreach($hosts as $host)
                         @if ($host->hostid == $rq_hostid)
                             <option value="{{ $host->hostid }}" selected> {{ $host->name }}</option>
@@ -63,9 +63,9 @@
             </div>
             <div class='col-md-3'>
                 <div class="form-group">
-                    <label for="">Đồ thị</label>
+                    <label for="">{{__('Graph')}}</label>
                     <select class="form-control" name="graphid" id="" onchange="this.form.submit()">
-                    <option value=0>Tất cả</option>
+                    <option value=0>{{__('All')}}</option>
                     @foreach($graphs as $graph)
                         @if ($graph->graphid == $rq_graphid)
                             <option value="{{ $graph->graphid }}" selected> {{ $graph->name }}</option>
@@ -79,8 +79,8 @@
         </form>
     </div>
 
-    <div style="text-align: center;"><button type="button" id="savePdf" class="btn btn-primary" onclick="generatePDF()">Generate PDF</button></div>
-    <div style="text-align: center;"><span id="genmsg" style="display:none; color:#0000FF;"><b>Generating PDF ...</b></span></div>
+    <div style="text-align: center;"><button type="button" id="savePdf" class="btn btn-primary" onclick="generatePDF()">{{__('Generate PDF')}}</button></div>
+    <div style="text-align: center;"><span id="genmsg" style="display:none; color:#0000FF;"><b>{{__('Generating PDF ...')}}</b></span></div>
 
     <div id="plotid" class="container-fluid"></div>
 

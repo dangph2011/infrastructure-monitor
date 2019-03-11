@@ -9,7 +9,7 @@
                 </span>
                 </a>
         <ul class="treeview-menu">
-            <li><a href="/graph/create">Create graph</a></li>
+            {{-- <li><a href="/graph/create">Create graph</a></li> --}}
             <li><a href="/graph">View graph</a></li>
         </ul>
     </li>

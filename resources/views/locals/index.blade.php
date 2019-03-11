@@ -1,5 +1,5 @@
 @extends('layouts.main')
-@section('page-header') Máy chủ khu vực
+@section('page-header') {{__('Local Server')}}
 @endsection
 
 @section('contents')
@@ -10,14 +10,14 @@
             <thead>
                 <tr>
                     <th>#</th>
-                    <th>Name</th>
-                    <th>Host</th>
-                    <th>Description</th>
-                    <th>Database</th>
-                    <th>Note</th>
-                    <th>Created at</th>
-                    <th>Updated at</th>
-                    <th width="15%">Action</th>
+                    <th>{{__('Name')}}</th>
+                    <th>{{__('Host')}}</th>
+                    <th>{{__('Description')}}</th>
+                    <th>{{__('Database')}}</th>
+                    <th>{{__('Note')}}</th>
+                    <th>{{__('Created at')}}</th>
+                    <th>{{__('Updated at')}}</th>
+                    <th width="15%">{{__('Action')}}</th>
                 </tr>
             </thead>
             <tbody>

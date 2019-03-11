@@ -1,0 +1,50 @@
+{
+    "Local Server": "Máy chủ khu vực",
+    "Group": "Nhóm",
+    "Host": "Máy chủ",
+    "Graph": "Đồ thị",
+    "Generate PDF": "Sinh dữ liệu PDF",
+    "Generating PDF ...": "Đang sinh dữ liệu PDF",
+    "All": "Tất cả",
+    "Local server is not found": "Hệ thống chưa quản lý máy chủ khu vực nào",
+
+    "Create Local Server": "Tạo máy chủ khu vực",
+    "Local Server IP": "IP máy chủ khu vực",
+    "Name": "Tên",
+    "Description": "Mô tả ngắn gọn",
+    "Note": "Ghi chú",
+    "Database": "Cơ sở dữ liệu",
+    "Save": "Lưu",
+
+    "Created at": "Thời gian tạo",
+    "Updated at": "Thời gian thay đổi",
+    "Action": "Chức năng",
+
+    "Replication": "Bản sao CSDL",
+    "Channel Name": "Kênh truyền",
+    "Service State": "Trạng thái",
+    "Last Error Message": "Lỗi",
+    "Port": "Cổng",
+    "Slave User": "Tài khoản",
+
+    "Create Replication": "Tạo bản sao CSDL",
+    "Type": "Loại",
+    "Create New": "Tạo mới",
+    "Existed Back up": "Bản sao đã có",
+    "Backup User": "Tài khoản sao lưu",
+    "Backup Password": "Mật khẩu sao lưu",
+    "Local Database": "Tên cơ sở dữ liệu khu vực",
+    "Slave Account": "Tài khoản bản sao",
+    "Slave Password": "Mật khẩu bản sao",
+
+    "User": "Tài khoản",
+    "State": "Trạng thái",
+    "Error": "Lỗi",
+    "Log text": "Lược sử",
+
+    "Create Backup": "Tạo bản sao CSDL",
+    "Dump Database": "Lịch sử bản sao CSDL",
+    "Log File": "Tệp tin nhật ký",
+    "Log Pos": "Vị trí",
+    "Filename": "Tên tệp tin"
+}
