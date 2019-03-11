@@ -10,7 +10,7 @@ class History extends Model
     //
 
     protected $table = 'history';
-    protected $connection = 'zabbix';
+    // protected $connection = 'zabbix';
 
     // public function getClockAttribute()
     // {
@@ -27,9 +27,9 @@ class History extends Model
     //     return "x:" . $this->attributes['clock'] . "," . "y:" . $this->attributes['value'];
     // }
 
-    public static function getClockAndValueData(int $itemid)
+    public function getClockAndValueData(int $itemid)
     {
-        $histories = History::where('itemid', $itemid)->orderBy('clock')->get();
+        $histories = $this::where('itemid', $itemid)->orderBy('clock')->get();
         $x_data = collect();
         $y_data = collect();
         $histories->each(function ($history) use ($x_data, $y_data) {

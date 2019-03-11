@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Event extends Model
 {
     //
-    protected $connection = 'zabbix';
+    // protected $connection = 'zabbix';
     protected $primaryKey = 'eventid';
 
     public function problem()

@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Problem extends Model
 {
     //
-    protected $connection = 'zabbix';
+    // protected $connection = 'zabbix';
     protected $table = 'problem';
 
     public function event()

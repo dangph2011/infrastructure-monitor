@@ -9,7 +9,7 @@ class Host extends Model
     //
     // protected $table = 'hosts';
     protected $primaryKey = 'hostid';
-    protected $connection = 'zabbix';
+    // protected $connection = 'zabbix';
 
     public function hostGroups()
     {
@@ -26,9 +26,9 @@ class Host extends Model
         return $this->belongsToMany(Group::class, 'hosts_groups', 'hostid', 'groupid');
     }
 
-    public static function getHostByGroupIds($groupids) {
+    public function getHostByGroupIds($groupids) {
         //get hosts based on selected group
-        $hosts = Host::where('status', 0)->WhereIn('flags', [0, 1])
+        $hosts = $this::where('status', 0)->WhereIn('flags', [0, 1])
         ->whereHas('groups', function ($query) use ($groupids) {
             $query->whereIn('hstgrp.groupid', $groupids);
         })
@@ -40,8 +40,8 @@ class Host extends Model
         return $hosts;
     }
 
-    public static function getAllHost() {
-        $hosts = Host::where('status', 0)->WhereIn('flags', [0, 1])
+    public function getAllHost() {
+        $hosts = $this::where('status', 0)->WhereIn('flags', [0, 1])
         ->whereHas('items', function ($query) {
             $query->whereHas('graphs', function ($query) {
                 $query->whereIN('flags', [0, 4]);

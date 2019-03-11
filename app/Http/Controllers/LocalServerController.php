@@ -4,8 +4,6 @@ namespace App\Http\Controllers;
 
 use App\LocalServer;
 use Illuminate\Http\Request;
-use App\ReplicationLog;
-use Illuminate\Support\Facades\DB;
 
 class LocalServerController extends Controller
 {

@@ -5,7 +5,8 @@ namespace App\Http\Controllers;
 use App\Graph;
 use App\Group;
 use App\Host;
-use Illuminate\Http\Request;
+use App\LocalServer;
+use App\Item;
 
 class GraphController extends Controller
 {
@@ -17,11 +18,43 @@ class GraphController extends Controller
 
     public function view()
     {
+        $requestLocalId = request('localid', "");
+
+        $localServers = LocalServer::all();
+
+        if ($localServers->isEmpty()) {
+            return view('locals.blank');
+        }
+
+        if ($requestLocalId == "") {
+            $firstLocalServer = LocalServer::first();
+            $requestLocalId = $firstLocalServer->id;
+        }
+
+        $databaseConnection = LocalServer::find($requestLocalId)->database;
+        $config = getDatabaseConnection($databaseConnection);
+
+        if (!$config) {
+            createDatabaseConnectionByDatabaseName($databaseConnection, $databaseConnection);
+        }
+        $config = getDatabaseConnection($databaseConnection);
+
+        $GROUP = new Group;
+        $HOST = new Host;
+        $GRAPH = new Graph;
+        $ITEM = new Item;
+        $GROUP->setConnection($databaseConnection);
+        $HOST->setConnection($databaseConnection);
+        $GRAPH->setConnection($databaseConnection);
+        $ITEM->setConnection($databaseConnection);
+
         $groupids = collect();
         $hostids = collect();
         // $graphid = 0;
 
-        $groups = Group::getGroup();
+        // $groups = Group::on('zabbix')->getGroup();
+        // $groups = $GROUP->getGroup($GROUP);
+        $groups = $GROUP->getGroup();
 
         //Get groupId request
         $rq_groupid = request('groupid', 0);
@@ -37,7 +70,7 @@ class GraphController extends Controller
         }
 
         //get hosts based on selected group
-        $hosts = Host::getHostByGroupIds($groupids);
+        $hosts = $HOST->getHostByGroupIds($groupids);
 
         if ($rq_hostid == 0) {
             $hosts->each(function ($host) use ($hostids) {
@@ -48,7 +81,7 @@ class GraphController extends Controller
         }
 
         //get graphs based on selected group and host
-        $graphs = Graph::getGraphByGroupAndHost($hostids);
+        $graphs = $GRAPH->getGraphByGroupAndHost($hostids);
 
         //get items based on selected graph
 
@@ -58,10 +91,10 @@ class GraphController extends Controller
 
         $data = collect();
         $layout = collect();
-        list($data, $layout) = getDataAndLayoutFromGraph($rq_graphid);
+        list($data, $layout) = getDataAndLayoutFromGraph($rq_graphid, $databaseConnection);
         // dd($tracers);
         // return $layout;
-        return view('graphs.view', compact('groups', 'hosts', 'rq_groupid', 'graphs', 'rq_hostid', 'data', 'layout', 'rq_graphid'));
+        return view('graphs.view', compact('groups', 'hosts', 'rq_groupid', 'graphs', 'rq_hostid', 'data', 'layout', 'rq_graphid', 'localServers', 'requestLocalId'));
     }
 
     public function create()

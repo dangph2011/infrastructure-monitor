@@ -9,7 +9,7 @@ class Report extends Model
     //
     // protected $table = 'graphs';
     protected $primaryKey = 'reportid';
-    protected $connection = 'zabbix';
+    // protected $connection = 'zabbix';
     public function reportGraphs()
     {
         return $this->hasMany(ReportsGraph::class, 'graphid', 'graphid');

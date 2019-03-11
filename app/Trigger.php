@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Trigger extends Model
 {
     //
-    protected $connection = 'zabbix';
+    // protected $connection = 'zabbix';
     protected $primaryKey = 'triggerid';
     public function items()
     {

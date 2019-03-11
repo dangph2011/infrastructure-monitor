@@ -1,6 +1,7 @@
 <?php
 
-use League\Flysystem\Config;
+use App\Graph;
+use App\Item;
 
 function getSelectorOption($options)
 {
@@ -117,19 +118,24 @@ function smoothClockData($clockValue, $delayTime)
     }
 }
 
-function getDataAndLayoutFromGraph($graphid)
+function getDataAndLayoutFromGraph($graphid, $databaseConnection)
 {
+    $GRAPH = new Graph;
+    $GRAPH->setConnection($databaseConnection);
+    $ITEM = new Item;
+    $ITEM->setConnection($databaseConnection);
+
     $data = collect();
     $layout = collect();
     if ($graphid != 0) {
-        $graph = \App\Graph::find($graphid);
-        $items = \App\Graph::find($graphid)->items;
+        $graph = $GRAPH->find($graphid);
+        $items = $GRAPH->find($graphid)->items;
         if ($graph->graphtype == GRAPH_TYPE_NORMAL) {
-            $items->each(function ($item) use ($data, $graphid) {
+            $items->each(function ($item) use ($data, $ITEM, $databaseConnection) {
                 //get data
-                $clockValue = getClockAndValueNumericData($item->itemid, $item->value_type);
+                $clockValue = getClockAndValueNumericData($item->itemid, $item->value_type, $databaseConnection);
                 //get delay time to handle gaps data
-                $delayTime = \App\Item::convertToTimestamp($item->delay);
+                $delayTime = $ITEM->convertToTimestamp($item->delay);
                 //add null to gaps data
                 smoothClockData($clockValue, $delayTime);
 
@@ -147,11 +153,11 @@ function getDataAndLayoutFromGraph($graphid)
 
         } elseif ($graph->graphtype == GRAPH_TYPE_STACKED) {
             //Draw stacked (area chart)
-            $items->each(function ($item) use ($data, $graphid) {
+            $items->each(function ($item) use ($data, $ITEM, $databaseConnection) {
                 //get data
-                $clockValue = getClockAndValueNumericData($item->itemid, $item->value_type, 'trends');
+                $clockValue = getClockAndValueNumericData($item->itemid, $item->value_type, $databaseConnection, 'trends');
                 //get delay time to handle gaps data
-                $delayTime = \App\Item::convertToTimestamp($item->delay);
+                $delayTime = $ITEM->convertToTimestamp($item->delay);
                 //add null to gaps data
                 smoothClockData($clockValue, $delayTime);
                 //create data stacked
@@ -170,8 +176,8 @@ function getDataAndLayoutFromGraph($graphid)
             //Get total of pie
             $value = collect();
             $label = collect();
-            $items->each(function ($item) use ($value, $label) {
-                $clockValue = getClockAndValueNumericData($item->itemid, $item->value_type);
+            $items->each(function ($item) use ($value, $label, $databaseConnection) {
+                $clockValue = getClockAndValueNumericData($item->itemid, $item->value_type, $databaseConnection);
                 if ($item->pivot->type == 2) {
                     $value->prepend($clockValue[1]->avg());
                     $label->prepend($item->name);
@@ -196,14 +202,14 @@ function getDataAndLayoutFromGraph($graphid)
 }
 
 // max clock 2147483647 03:14:07 UTC on 19 January 2038 like Y2K
-function getClockAndValueNumericData($itemid, $data_type, $table = 'history', $min_clock = 0, $max_clock = 2147483647)
+function getClockAndValueNumericData($itemid, $data_type, $databaseConnection = 'zabbix', $table = 'history', $min_clock = 0, $max_clock = 2147483647)
 {
     // $table = 'history';
     if ($data_type == ITEM_VALUE_TYPE_UNSIGNED) {
         $table .= '_uint';
     }
 
-    $tableData = DB::connection('zabbix')->table($table)->where('itemid', $itemid)->where('clock', ">=", $min_clock)
+    $tableData = DB::connection($databaseConnection)->table($table)->where('itemid', $itemid)->where('clock', ">=", $min_clock)
         ->where('clock', "<", $max_clock)->orderBy('clock')->get();
     $xData = collect();
     $yData = collect();
@@ -240,6 +246,25 @@ function createDatabaseConnection($key, $driver, $host, $port, $database, $usern
     $config['collation'] = $collation;
     $config['engine'] = $engine;
     Config::set('database.connections.' . $key, $config);
+}
+
+function createDatabaseConnectionByDatabaseName($key, $database) {
+    $config = Config::get('database.connections.' . $key);
+    $config['driver'] = 'mysql';
+    $config['host'] = env('DB_HOST', '127.0.0.1');
+    $config['port'] = env('DB_PORT', 3306);
+    $config['database'] = $database;
+    $config['username'] = env('DB_USERNAME', 'forge');
+    $config['password'] = env('DB_PASSWORD', '');
+    $config['charset'] = 'utf8mb4';
+    $config['collation'] = 'utf8mb4_unicode_ci';
+    $config['engine'] = null;
+    Config::set('database.connections.' . $key, $config);
+}
+
+function getDatabaseConnection($key) {
+    $config = Config::get('database.connections.' . $key);
+    return $config;
 }
 
 function purgeDatabaseConnection($name = null) {

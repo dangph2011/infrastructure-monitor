@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class GraphsItem extends Model
 {
     protected $primaryKey = 'gitemid';
-    protected $connection = 'zabbix';
+    // protected $connection = 'zabbix';
     //
     public function item()
     {

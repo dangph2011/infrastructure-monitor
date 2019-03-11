@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class EventRecovery extends Model
 {
     //
-    protected $connection = 'zabbix';
+    // protected $connection = 'zabbix';
     protected $primaryKey = 'eventid';
     protected $table = 'event_recovery';
 

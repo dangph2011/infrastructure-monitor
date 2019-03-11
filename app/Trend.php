@@ -7,10 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 class Trend extends Model
 {
     //
-    protected $connection = 'zabbix';
-    public static function getClockAndValueData(int $itemid)
+    // protected $connection = 'zabbix';
+    public function getClockAndValueData(int $itemid)
     {
-        $histories = Trend::where('itemid', $itemid)->get();
+        $histories = $this::where('itemid', $itemid)->get();
         $x_data = collect();
         $y_data = collect();
         $histories->each(function ($history) use ($x_data, $y_data) {

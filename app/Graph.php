@@ -9,7 +9,7 @@ class Graph extends Model
     //
     // protected $table = 'graphs';
     protected $primaryKey = 'graphid';
-    protected $connection = 'zabbix';
+    // protected $connection = 'zabbix';
     public function graphsItems()
     {
         return $this->hasMany(GraphsItem::class, 'graphid', 'graphid');
@@ -20,10 +20,10 @@ class Graph extends Model
         return $this->belongsToMany(Item::class, 'graphs_items', 'graphid', 'itemid')->withPivot('type');
     }
 
-    public static function getGraphByGroupAndHost($hostids)
+    public function getGraphByGroupAndHost($hostids)
     {
         //get graphs based on selected group and host
-        $graphs = Graph::whereIn('flags', [0, 4])
+        $graphs =  $this::whereIn('flags', [0, 4])
             ->whereHas('items', function ($query) use ($hostids) {
                 $query->whereHas('host', function ($query) use ($hostids) {
                     $query->where('status', 0)->whereIn('hosts.hostid', $hostids);

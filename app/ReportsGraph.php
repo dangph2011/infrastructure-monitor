@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class ReportsGraph extends Model
 {
     protected $primaryKey = 'rgraphid';
-    protected $connection = 'zabbix';
+    // protected $connection = 'zabbix';
     //
     public function report()
     {
