@@ -15,7 +15,7 @@ class CreateReplicationLogsTable extends Migration
     {
         Schema::create('replication_logs', function (Blueprint $table) {
             $table->string('CHANNEL_NAME', 64)->primary();
-            $table->enum('SERVICE_STATE', ['ON', 'OFF', 'STRING'])->default('ON');
+            $table->enum('SERVICE_STATE', ['ON', 'OFF', 'CONNECTING'])->default('ON');
             $table->string('LAST_ERROR_MESSAGE', 1024)->nullable();
             $table->string('HOST', 1024)->nullable();
             $table->integer('PORT')->nullable();

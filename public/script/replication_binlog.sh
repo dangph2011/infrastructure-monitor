@@ -65,15 +65,15 @@ mysql -h$MASTER_HOST -u$USER_SLAVE -p$PASS_SLAVE -P$PORT -e "exit"
 ##
 
 echo "----- RUN ON SLAVE -----"
+echo "  - Stop slave for channel '$CHANNEL'"
+sleep 2
+mysql -h$HOST_LOCAL -u$USER_LOCAL -p$PASS_LOCAL -P$PORT_LOCAL -e "STOP SLAVE FOR CHANNEL '$CHANNEL';"
+
 echo "  - Creating database copy"
 mysql -h$HOST_LOCAL -u$USER_LOCAL -p$PASS_LOCAL -P$PORT_LOCAL -e "DROP DATABASE IF EXISTS $DB; CREATE DATABASE $DB;"
 # scp $DUMP_FILE $HOST_LOCAL:$DUMP_FILE >/dev/null
 sleep 2
 mysql -h$HOST_LOCAL -u$USER_LOCAL -p$PASS_LOCAL -P$PORT_LOCAL $DB < $DUMP_FILE
-
-echo "  - Stop slave for channel '$CHANNEL' first"
-sleep 2
-mysql -h$HOST_LOCAL -u$USER_LOCAL -p$PASS_LOCAL -P$PORT_LOCAL -e "STOP SLAVE FOR CHANNEL '$CHANNEL';"
 
 echo "  - Setting up slave replication"
 sleep 2
