@@ -2,6 +2,8 @@
 
 use App\Graph;
 use App\Item;
+use App\Trigger;
+use App\Macros\CMacrosResolverHelper;
 
 function getSelectorOption($options)
 {
@@ -118,6 +120,52 @@ function smoothClockData($clockValue, $delayTime)
     }
 }
 
+function getTriggerByItem($items, $databaseConnection) {
+    $TRIGGER = new Trigger;
+    $TRIGGER->setConnection($databaseConnection);
+    $shapes = collect();
+    foreach ($items as $item) {
+        $triggers = $TRIGGER->where('status', TRIGGER_STATUS_ENABLED)
+        ->whereHas('items', function($query) use ($item) {
+            $query->where('items.itemid',$item->itemid);
+        })->orderBy('priority')->get();
+
+        foreach ($triggers as $trigger) {
+            $trigger['expression'] = CMacrosResolverHelper::resolveTriggerExpressionUserMacro($trigger->toArray());
+            if (!preg_match(
+                '/^\{([0-9]+)\}\s*?([<>=]|[<>][=])\s*?([\-0-9\.]+)(['.ZBX_BYTE_SUFFIXES.ZBX_TIME_SUFFIXES.']?)$/',
+                    $trigger['expression'], $arr)) {
+                continue;
+            }
+            $constant = $arr[3].$arr[4];
+            $shape = createShapeLayout($constant);
+            $shapes->push($shape);
+        }
+    }
+    return $shapes;
+}
+
+function createShapeLayout($value) {
+    return collect([
+        "type" => "line",
+        "xref" => "paper",
+        "x0" => 0,
+        "y0" => $value,
+        "x1" => 1,
+        "y1" => $value,
+        "line" => createLineShape('rgb(128, 0, 128)', 4, 'dot')
+    ]);
+}
+
+function createLineShape($color, $width, $type){
+    return collect([
+        "color" => $color,
+        "width" => $width,
+        "dash" => $type,
+    ]);
+}
+
+
 function getDataAndLayoutFromGraph($graphid, $databaseConnection)
 {
     $GRAPH = new Graph;
@@ -130,6 +178,9 @@ function getDataAndLayoutFromGraph($graphid, $databaseConnection)
     if ($graphid != 0) {
         $graph = $GRAPH->find($graphid);
         $items = $GRAPH->find($graphid)->items;
+
+        $shapes = getTriggerByItem($items, $databaseConnection);
+
         if ($graph->graphtype == GRAPH_TYPE_NORMAL) {
             $items->each(function ($item) use ($data, $ITEM, $databaseConnection) {
                 //get data
@@ -196,7 +247,10 @@ function getDataAndLayoutFromGraph($graphid, $databaseConnection)
         } elseif ($graph->graphtype == GRAPH_TYPE_EXPLODED) {
             //Draw exploded graph
         }
+
+        $layout->put("shapes", $shapes);
     }
+    // dd($layout);
 
     return array($data, $layout);
 }
@@ -271,4 +325,38 @@ function purgeDatabaseConnection($name = null) {
     DB::purge($name);
 }
 
+function zbx_toHash($value, $field = null) {
+	if (is_null($value)) {
+		return $value;
+	}
+	$result = [];
 
+	if (!is_array($value)) {
+		$result = [$value => $value];
+	}
+	elseif (isset($value[$field])) {
+		$result[$value[$field]] = $value;
+	}
+	else {
+		foreach ($value as $val) {
+			if (!is_array($val)) {
+				$result[$val] = $val;
+			}
+			elseif (isset($val[$field])) {
+				$result[$val[$field]] = $val;
+			}
+		}
+	}
+
+	return $result;
+}
+
+function _s($string) {
+	$arguments = array_slice(func_get_args(), 1);
+
+	return _params(_($string), $arguments);
+}
+
+function _params($format, array $arguments) {
+	return vsprintf($format, $arguments);
+}

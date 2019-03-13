@@ -26,7 +26,7 @@ class Item extends Model
 
     public function triggers()
     {
-        return $this->belongsToMany(Trigger::class, 'functions', 'itemid', 'triggerid');
+        return $this->belongsToMany(Trigger::class, 'functions', 'itemid', 'triggerid')->wherePivotIn('name', ['last','min','avg','max']);
     }
 
     //convert delay time to unix time gaps, interval time to get data

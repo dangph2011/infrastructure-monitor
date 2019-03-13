@@ -11,7 +11,7 @@ class Trigger extends Model
     protected $primaryKey = 'triggerid';
     public function items()
     {
-        return $this->belongsToMany(Item::class, 'functions', 'triggerid', 'itemid');
+        return $this->belongsToMany(Item::class, 'functions', 'triggerid', 'itemid')->wherePivotIn('name', ['last','min','avg','max']);
     }
 
     public function getHostByTriggerId($triggerId) {

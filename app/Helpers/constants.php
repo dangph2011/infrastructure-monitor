@@ -54,3 +54,17 @@ define('SEC_PER_MONTH',			2592000);
 define('SEC_PER_YEAR',			31536000);
 
 define('SCALE_RATIO', 0.8);
+
+define('TRIGGER_STATUS_ENABLED',	0);
+define('TRIGGER_STATUS_DISABLED',	1);
+
+define('INTERFACE_TYPE_ANY',		-1);
+define('INTERFACE_TYPE_UNKNOWN',	0);
+define('INTERFACE_TYPE_AGENT',		1);
+define('INTERFACE_TYPE_SNMP',		2);
+define('INTERFACE_TYPE_IPMI',		3);
+define('INTERFACE_TYPE_JMX',		4);
+
+// suffixes
+define('ZBX_BYTE_SUFFIXES', 'KMGT');
+define('ZBX_TIME_SUFFIXES', 'smhdw');
