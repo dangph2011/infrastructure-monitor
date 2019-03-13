@@ -5,8 +5,8 @@
 @section('scripts') {{--
 <script src="/bower_components/moment/moment.js"></script> --}} {{--
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js"></script> --}}
-<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-<script src="{{asset('js/jspdf.min.js')}}""></script>
+<script src={{asset('js/plotly-latest.min.js')}}></script>
+<script src="{{asset('js/jspdf.min.js')}}"></script>
 <script src="{{asset('js/html2canvas.js')}}"></script>
 @endsection
 
@@ -89,11 +89,6 @@
         var layout = {!!$layout!!}
         var myDiv = document.getElementById('plotid')
         Plotly.newPlot(myDiv, data, layout);
-        // print();
-        // Plotly.relayout( myDiv, {
-        //     'xaxis.autorange': true,
-        //     'yaxis.autorange': true
-        // });
 
         function generatePDF() {
             $("#savePdf").hide();
@@ -117,7 +112,16 @@
                 }, 0);
             });
 	    }
+
+
     </script>
+
+{{-- $(document).ready(function() {
+    setTimeout(function() {
+        location.reload();
+    }, 30000);
+}); --}}
+
 
     {{--
     <script>
