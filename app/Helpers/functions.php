@@ -35,7 +35,7 @@ function createSelectorOption($step, $stepMode, $count, $lable)
     ]);
 }
 
-function createDataLine($x_data, $y_data, $mode, $name = null, $connectgaps = true, $size = null)
+function createDataLine($x_data, $y_data, $mode, $name = null, $connectgaps = true, $size = null, $color = null, $dash = "solid")
 {
     return collect([
         "x" => $x_data,
@@ -43,7 +43,11 @@ function createDataLine($x_data, $y_data, $mode, $name = null, $connectgaps = tr
         "mode" => $mode,
         "name" => $name,
         "connectgaps" => $connectgaps,
-        "line" => ["width" => $size],
+        "line" => [
+            "width" => $size,
+            "color" => $color,
+            "dash" => $dash
+        ],
         // "type" => 'scatter',
     ]);
 }
@@ -120,12 +124,12 @@ function smoothClockData($clockValue, $delayTime)
     }
 }
 
-function getTriggerByItem($items, $databaseConnection) {
-    $TRIGGER = new Trigger;
-    $TRIGGER->setConnection($databaseConnection);
+function createShapeLayoutByItem($items, $databaseConnection) {
+    $config = App\Config::on($databaseConnection)->first();
+
     $shapes = collect();
     foreach ($items as $item) {
-        $triggers = $TRIGGER->where('status', TRIGGER_STATUS_ENABLED)
+        $triggers = Trigger::on($databaseConnection)->where('status', TRIGGER_STATUS_ENABLED)
         ->whereHas('items', function($query) use ($item) {
             $query->where('items.itemid',$item->itemid);
         })->orderBy('priority')->get();
@@ -138,22 +142,23 @@ function getTriggerByItem($items, $databaseConnection) {
                 continue;
             }
             $constant = $arr[3].$arr[4];
-            $shape = createShapeLayout($constant);
+            $shape = createShapeLayout($constant, $config['severity_color_' . $trigger->priority], $trigger->description);
             $shapes->push($shape);
         }
     }
     return $shapes;
 }
 
-function createShapeLayout($value) {
+function createShapeLayout($value, $color, $name) {
     return collect([
+        "name" => $name,
         "type" => "line",
         "xref" => "paper",
         "x0" => 0,
         "y0" => $value,
         "x1" => 1,
         "y1" => $value,
-        "line" => createLineShape('rgb(128, 0, 128)', 4, 'dot')
+        "line" => createLineShape($color, 4, 'dot')
     ]);
 }
 
@@ -175,13 +180,17 @@ function getDataAndLayoutFromGraph($graphid, $databaseConnection)
 
     $data = collect();
     $layout = collect();
+    $shapes = collect();
+    //set orientation of legend
+
     if ($graphid != 0) {
         $graph = $GRAPH->find($graphid);
         $items = $GRAPH->find($graphid)->items;
 
-        $shapes = getTriggerByItem($items, $databaseConnection);
-
         if ($graph->graphtype == GRAPH_TYPE_NORMAL) {
+            //onlye show trigger in line graph
+            $shapes = createShapeLayoutByItem($items, $databaseConnection);
+
             $items->each(function ($item) use ($data, $ITEM, $databaseConnection) {
                 //get data
                 $clockValue = getClockAndValueNumericData($item->itemid, $item->value_type, $databaseConnection);
@@ -190,7 +199,7 @@ function getDataAndLayoutFromGraph($graphid, $databaseConnection)
                 //add null to gaps data
                 smoothClockData($clockValue, $delayTime);
 
-                $data->push(createDataLine($clockValue[0], $clockValue[1], "line", $item->name, false, 1.5));
+                $data->push(createDataLine($clockValue[0], $clockValue[1], "lines", $item->name, false, 1.5));
             });
             //Draw line graph
 
@@ -201,6 +210,7 @@ function getDataAndLayoutFromGraph($graphid, $databaseConnection)
                 createYAxisLayoutLine(null, 'Value', true),
                 $graph->name
             );
+            $layout = $layout->union(setOrientedLegend(true, "h", 0, -1));
 
         } elseif ($graph->graphtype == GRAPH_TYPE_STACKED) {
             //Draw stacked (area chart)
@@ -222,6 +232,9 @@ function getDataAndLayoutFromGraph($graphid, $databaseConnection)
                 createYAxisLayoutLine(null, 'Value', true),
                 $graph->name
             );
+
+            $layout = $layout->union(setOrientedLegend(true, "h", 0, -1));
+
         } elseif ($graph->graphtype == GRAPH_TYPE_PIE) {
             //Draw pie graph
             //Get total of pie
@@ -244,15 +257,35 @@ function getDataAndLayoutFromGraph($graphid, $databaseConnection)
 
             $layout = createLayoutTitle($graph->name);
 
+            // $layout = $layout->union(setOrientedLegend(true, "v", 0.75, 0.5));
+
         } elseif ($graph->graphtype == GRAPH_TYPE_EXPLODED) {
             //Draw exploded graph
         }
 
-        $layout->put("shapes", $shapes);
+        if ($shapes->isNotEmpty()) {
+            $data->push(createDataLine(collect([null]), collect([null]), "lines", "", false, 1.5, "FFFFFF", "dot"));
+            foreach ($shapes as $shape) {
+                $data->push(createDataLine(collect([null]), collect([null]), "lines", "Trigger: " .$shape['name'], false, 1.5, $shape['line']['color'], "dot"));
+            }
+            $layout->put("shapes", $shapes);
+        }
     }
-    // dd($layout);
 
     return array($data, $layout);
+}
+
+function setOrientedLegend($showlegend, $oriented, $x, $y) {
+    return collect([
+        "showlegend" => $showlegend,
+        "legend" => collect([
+            "orientation" => $oriented,
+            // "yanchor" => "bottom",
+            // "xanchor" => "right",
+            "x" => $x,
+            "y" => $y,
+        ])
+    ]);
 }
 
 // max clock 2147483647 03:14:07 UTC on 19 January 2038 like Y2K

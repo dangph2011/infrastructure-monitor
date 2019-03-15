@@ -94,6 +94,7 @@ class GraphController extends Controller
         list($data, $layout) = getDataAndLayoutFromGraph($rq_graphid, $databaseConnection);
         // dd($tracers);
         // return $layout;
+        // return $data;
         return view('graphs.view', compact('groups', 'hosts', 'rq_groupid', 'graphs', 'rq_hostid', 'data', 'layout', 'rq_graphid', 'localServers', 'requestLocalId'));
     }
 

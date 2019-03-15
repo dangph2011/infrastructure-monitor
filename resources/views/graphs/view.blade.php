@@ -6,6 +6,7 @@
 <script src="/bower_components/moment/moment.js"></script> --}} {{--
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js"></script> --}}
 <script src={{asset('js/plotly-latest.min.js')}}></script>
+{{-- <script src="https://cdn.plot.ly/plotly-1.10.2.min.js"></script> --}}
 <script src="{{asset('js/jspdf.min.js')}}"></script>
 <script src="{{asset('js/html2canvas.js')}}"></script>
 @endsection
@@ -82,13 +83,17 @@
     <div style="text-align: center;"><button type="button" id="savePdf" class="btn btn-primary" onclick="generatePDF()">{{__('Generate PDF')}}</button></div>
     <div style="text-align: center;"><span id="genmsg" style="display:none; color:#0000FF;"><b>{{__('Generating PDF ...')}}</b></span></div>
 
-    <div id="plotid" class="container-fluid"></div>
+    <div id="plotid" class="plotid"></div>
 
     <script>
         var data = {!!$data!!};
         var layout = {!!$layout!!}
         var myDiv = document.getElementById('plotid')
         Plotly.newPlot(myDiv, data, layout);
+        console.log("Height: ", myDiv.offsetHeight);
+        console.log("Width: ", myDiv.offsetWidth);
+        // document.getElementsByClassName('legend')[0].setAttribute("transform", "translate(50, 400)");
+        // $('#plotid g.xy').attr('transform') == $('#plotid g.legend').attr('transform').replace(/ /g, '')
 
         function generatePDF() {
             $("#savePdf").hide();
@@ -115,6 +120,74 @@
 
 
     </script>
+{{--
+    <script>
+    var threshold1 = 12;
+    var threshold2 = 16;
+    var offset = 0.75;
+
+    var trace1 = {
+    x: [1, 2, 3, 4],
+    y: [10, 15, 13, 17],
+    type: 'scatter'
+    };
+
+    var trace2 = {
+    x: [Math.min.apply(Math, trace1.x) + offset,
+        Math.max.apply(Math, trace1.x) - offset],
+    y: [threshold1 - offset, threshold2 - offset],
+    mode: 'text',
+    text: ['lower threshold', 'upper threshold'],
+    showlegend: true
+    }
+
+    var layout = {
+    xaxis: {
+        title: "x-axis",
+        tickangle: 45,
+        rangemode: 'nonnegative',
+        autorange: true,
+        exponentformat: "none"
+    },
+    yaxis: {
+        title: "Time",
+        tickangle: 45,
+        rangemode: 'nonnegative',
+        range: [0, 20],
+        autorange: false
+    },
+    shapes: [{
+        type: 'line',
+        xref: 'paper',
+        x0: 0,
+        y0: threshold1,
+        x1: 1,
+        y1: threshold1,
+        line: {
+        color: 'rgb(255, 0, 0)',
+        width: 2,
+        dash: 'dot'
+        },
+    }, {
+        type: 'line',
+        xref: 'paper',
+        x0: 0,
+        y0: threshold2,
+        x1: 1,
+        y1: threshold2,
+        line: {
+        color: 'rgb(0, 255, 0)',
+        width: 2,
+        dash: 'dot'
+        },
+    }]
+    };
+
+    var myDiv = document.getElementById('plotid')
+    //Plotly.newPlot(myDiv, [trace1, trace2], layout);
+    Plotly.newPlot(myDiv, [trace1], layout);
+
+    </script> --}}
 
 {{-- $(document).ready(function() {
     setTimeout(function() {
