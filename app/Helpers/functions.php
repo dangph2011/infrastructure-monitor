@@ -4,6 +4,7 @@ use App\Graph;
 use App\Item;
 use App\Trigger;
 use App\Macros\CMacrosResolverHelper;
+use Illuminate\Support\Facades\DB;
 
 function getSelectorOption($options)
 {
@@ -63,12 +64,14 @@ function createXAxisLayoutLine($type = null, $title = null, $autorange = true, $
     ]);
 }
 
-function createYAxisLayoutLine($type = null, $title = null, $autorange = true)
+function createYAxisLayoutLine($type = null, $title = null, $ticksuffix = "", $autorange = true)
 {
     return collect([
         "autorange" => $autorange,
         "type" => $type,
         "title" => $title,
+        "ticksuffix" => ' ' . $ticksuffix,
+        "exponentformat" => "B"
     ]);
 }
 
@@ -80,6 +83,8 @@ function createLayoutLine($xaxis = null, $yaxis = null, $title = null)
         "yaxis" => $yaxis,
     ]);
 }
+
+
 
 function createLayoutTitle($title = null)
 {
@@ -124,35 +129,70 @@ function smoothClockData($clockValue, $delayTime)
     }
 }
 
-function createShapeLayoutByItem($items, $databaseConnection) {
+function createTriggerShape($items, $databaseConnection) {
     $config = App\Config::on($databaseConnection)->first();
-
     $shapes = collect();
     foreach ($items as $item) {
-        $triggers = Trigger::on($databaseConnection)->where('status', TRIGGER_STATUS_ENABLED)
-        ->whereHas('items', function($query) use ($item) {
-            $query->where('items.itemid',$item->itemid);
-        })->orderBy('priority')->get();
+        // $db_triggers = DBselect(
+        //     'SELECT DISTINCT h.host,tr.description,tr.triggerid,tr.expression,tr.priority,tr.value'.
+        //     ' FROM triggers tr,functions f,items i,hosts h'.
+        //     ' WHERE tr.triggerid=f.triggerid'.
+        //         " AND f.name IN ('last','min','avg','max')".
+        //         ' AND tr.status='.TRIGGER_STATUS_ENABLED.
+        //         ' AND i.itemid=f.itemid'.
+        //         ' AND h.hostid=i.hostid'.
+        //         ' AND f.itemid='.zbx_dbstr($item['itemid']).
+        //     ' ORDER BY tr.priority'
+        // );
+
+        // $triggers = DB::connection(getGlobalDatabaseConnection())
+        //                 ->table('triggers as tr,functions as f,items as i,hosts as h')
+        //                 ->where('tr.triggerid', 'f.triggerid')
+        //                 ->whereIn('f.name', collect(['last', 'min', 'avg', 'max']))
+        //                 ->where('tr.status', TRIGGER_STATUS_ENABLED)
+        //                 ->where('i.itemid', 'f.itemid')
+        //                 ->where('h.hostid', 'i.hostid')
+        //                 ->where('f.itemid', $item['itemid'])
+        //                 ->select('h.host', 'tr.description', 'tr.triggerid', 'tr.expression', 'tr.priority', 'tr.value')
+        //                 ->orderBy('tr.priority')
+        //                 ->get();
+
+        $triggers = DB::connection(getGlobalDatabaseConnection())
+            ->table('triggers as tr')
+            ->join('functions as f', 'f.triggerid', '=', 'tr.triggerid')
+            ->join('items as i', 'f.itemid', '=', 'i.itemid')
+            ->join('hosts as h', 'h.hostid', '=', 'i.hostid')
+            ->whereIn('f.name', collect(['last', 'min', 'avg', 'max']))
+            ->where('tr.status', TRIGGER_STATUS_ENABLED)
+            ->where('f.itemid', $item['itemid'])
+            ->select('h.host', 'tr.description', 'tr.triggerid', 'tr.expression', 'tr.priority', 'tr.value')
+            ->orderBy('tr.priority')
+            ->get();
+        // $triggers = Trigger::on($databaseConnection)->where('status', TRIGGER_STATUS_ENABLED)
+        // ->whereHas('items', function($query) use ($item) {
+        //     $query->where('items.itemid',$item->itemid);
+        // })->orderBy('priority')->get();
 
         foreach ($triggers as $trigger) {
-            $trigger['expression'] = CMacrosResolverHelper::resolveTriggerExpressionUserMacro($trigger->toArray());
+            $trigger = get_object_vars($trigger);
+            $trigger['expression'] = CMacrosResolverHelper::resolveTriggerExpressionUserMacro($trigger);
             if (!preg_match(
                 '/^\{([0-9]+)\}\s*?([<>=]|[<>][=])\s*?([\-0-9\.]+)(['.ZBX_BYTE_SUFFIXES.ZBX_TIME_SUFFIXES.']?)$/',
                     $trigger['expression'], $arr)) {
                 continue;
             }
             // dd($trigger);
-            CMacrosResolverHelper::resolveTriggerName($trigger->toArray());
-
             $constant = $arr[3].$arr[4];
-            $shape = createShapeLayout($constant, $config['severity_color_' . $trigger->priority], $trigger->description);
+            $description = CMacrosResolverHelper::resolveTriggerName($trigger) . '  ' . '['.$arr[2].' '.$constant.']';
+
+            $shape = createShapeLayout(convert($constant), $config['severity_color_' . $trigger['priority']], $description);
             $shapes->push($shape);
         }
     }
     return $shapes;
 }
 
-function createShapeLayout($value, $color, $name) {
+function createShapeLayout($value, $color, $name, $dash = 'dot') {
     return collect([
         "name" => $name,
         "type" => "line",
@@ -161,7 +201,7 @@ function createShapeLayout($value, $color, $name) {
         "y0" => $value,
         "x1" => 1,
         "y1" => $value,
-        "line" => createLineShape($color, 4, 'dot')
+        "line" => createLineShape($color, 2, $dash)
     ]);
 }
 
@@ -192,7 +232,7 @@ function getDataAndLayoutFromGraph($graphid, $databaseConnection)
 
         if ($graph->graphtype == GRAPH_TYPE_NORMAL) {
             //onlye show trigger in line graph
-            $shapes = createShapeLayoutByItem($items, $databaseConnection);
+            $shapes = createTriggerShape($items, $databaseConnection);
 
             $items->each(function ($item) use ($data, $ITEM, $databaseConnection) {
                 //get data
@@ -209,11 +249,11 @@ function getDataAndLayoutFromGraph($graphid, $databaseConnection)
             $rangeslider = collect();
             $rangeselector = collect(['buttons' => getSelectorOption(['1m', '3m', '6m', 'ytd', '1y'])]);
             $layout = createLayoutLine(
-                createXAxisLayoutLine('date', 'Date', true, $rangeselector, $rangeslider),
-                createYAxisLayoutLine(null, 'Value', true),
+                createXAxisLayoutLine('date', null, true, $rangeselector, null),
+                createYAxisLayoutLine(null, null,  $items[0]->units, true),
                 $graph->name
             );
-            $layout = $layout->union(setOrientedLegend(true, "h", 0, -1));
+            $layout = $layout->union(setOrientedLegend(true, "v", 0, -1));
 
         } elseif ($graph->graphtype == GRAPH_TYPE_STACKED) {
             //Draw stacked (area chart)
@@ -231,12 +271,12 @@ function getDataAndLayoutFromGraph($graphid, $databaseConnection)
             $rangeslider = collect();
             $rangeselector = collect(['buttons' => getSelectorOption(['1m', '3m', '6m', 'ytd', '1y'])]);
             $layout = createLayoutLine(
-                createXAxisLayoutLine('date', 'Date', true, $rangeselector, $rangeslider),
-                createYAxisLayoutLine(null, 'Value', true),
+                createXAxisLayoutLine('date', null, true, $rangeselector, null),
+                createYAxisLayoutLine(null, null, null, true),
                 $graph->name
             );
 
-            $layout = $layout->union(setOrientedLegend(true, "h", 0, -1));
+            $layout = $layout->union(setOrientedLegend(true, "v", 0, -1));
 
         } elseif ($graph->graphtype == GRAPH_TYPE_PIE) {
             //Draw pie graph
@@ -404,3 +444,43 @@ function _s($string) {
 function _params($format, array $arguments) {
 	return vsprintf($format, $arguments);
 }
+
+function convert($value) {
+	$value = trim($value);
+
+	if (!preg_match('/(?P<value>[\-+]?([.][0-9]+|[0-9]+[.]?[0-9]*))(?P<mult>['.ZBX_BYTE_SUFFIXES.ZBX_TIME_SUFFIXES.']?)/',
+			$value, $arr)) {
+		return $value;
+	}
+
+	$value = $arr['value'];
+	switch ($arr['mult']) {
+		case 'T':
+			$value *= 1024 * 1024 * 1024 * 1024;
+			break;
+		case 'G':
+			$value *= 1024 * 1024 * 1024;
+			break;
+		case 'M':
+			$value *= 1024 * 1024;
+			break;
+		case 'K':
+			$value *= 1024;
+			break;
+		case 'm':
+			$value *= 60;
+			break;
+		case 'h':
+			$value *= 60 * 60;
+			break;
+		case 'd':
+			$value *= 60 * 60 * 24;
+			break;
+		case 'w':
+			$value *= 60 * 60 * 24 * 7;
+			break;
+	}
+
+	return $value;
+}
+
