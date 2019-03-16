@@ -74,3 +74,8 @@ define('UNRESOLVED_MACRO_STRING', '*'._('UNKNOWN').'*');
 
 define('INTERFACE_SECONDARY',	0);
 define('INTERFACE_PRIMARY',		1);
+
+define('ITEM_CONVERT_WITH_UNITS',	0); // - do not convert empty units
+define('ITEM_CONVERT_NO_UNITS',		1); // - no units
+
+define('ZBX_PRECISION_10',	10);

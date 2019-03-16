@@ -93,12 +93,14 @@ function createLayoutTitle($title = null)
     ]);
 }
 
-function createDataPie($value, $lable)
+function createDataPie($value, $lable, $textinfo)
 {
     return collect([
         "values" => $value,
         "labels" => $lable,
         "type" => 'pie',
+        "hoverinfo" => "label+percent",
+        "textinfo" => $textinfo
     ]);
 }
 
@@ -283,20 +285,38 @@ function getDataAndLayoutFromGraph($graphid, $databaseConnection)
             //Get total of pie
             $value = collect();
             $label = collect();
-            $items->each(function ($item) use ($value, $label, $databaseConnection) {
+            $units = collect();
+            $sum = 0;
+            $items->each(function ($item) use ($value, $label, $databaseConnection, $units, &$sum) {
                 $clockValue = getClockAndValueNumericData($item->itemid, $item->value_type, $databaseConnection);
                 if ($item->pivot->type == 2) {
                     $value->prepend($clockValue[1]->avg());
                     $label->prepend($item->name);
+                    $units->prepend($item->units);
+                    $sum = $clockValue[1]->avg();
                 } else {
                     $value->push($clockValue[1]->avg());
                     $label->push($item->name);
+                    $units->push($item->units);
                 }
                 //get delay time to handle gaps data
             });
+
+            $label->transform(function($item, $key) use ($sum, $value, $units) {
+                $proc = ($sum == 0) ? 0 : ($value[$key] * 100) / $sum;
+                $strValue = sprintf(': %s ('.(round($proc) != round($proc, 2) ? '%0.2f' : '%0.0f').'%%)',
+					convert_units([
+						'value' => $value[$key],
+						'units' => $units[$key]
+					]),
+					$proc
+                );
+                return $item . ' ' . $strValue;;
+            });
+
             $value[0] -= $value->slice(1)->sum();
 
-            $data->push(createDataPie($value, $label));
+            $data->push(createDataPie($value, $label, 'label'));
 
             $layout = createLayoutTitle($graph->name);
 
@@ -484,3 +504,194 @@ function convert($value) {
 	return $value;
 }
 
+function convert_units($options = []) {
+	$defOptions = [
+		'value' => null,
+		'units' => null,
+		'convert' => ITEM_CONVERT_WITH_UNITS,
+		'byteStep' => false,
+		'pow' => false,
+		'ignoreMillisec' => false,
+		'length' => false
+	];
+
+	$options = zbx_array_merge($defOptions, $options);
+
+	// special processing for unix timestamps
+	if ($options['units'] == 'unixtime') {
+		return zbx_date2str(DATE_TIME_FORMAT_SECONDS, $options['value']);
+	}
+
+	// special processing of uptime
+	if ($options['units'] == 'uptime') {
+		return convertUnitsUptime($options['value']);
+	}
+
+	// special processing for seconds
+	if ($options['units'] == 's') {
+		return convertUnitsS($options['value'], $options['ignoreMillisec']);
+	}
+
+	// black list of units that should have no multiplier prefix (K, M, G etc) applied
+	$blackList = ['%', 'ms', 'rpm', 'RPM'];
+
+	// add to the blacklist if unit is prefixed with '!'
+	if ($options['units'] !== null && $options['units'] !== '' && $options['units'][0] === '!') {
+		$options['units'] = substr($options['units'], 1);
+		$blackList[] = $options['units'];
+	}
+
+	// any other unit
+	if (in_array($options['units'], $blackList) || (zbx_empty($options['units'])
+			&& ($options['convert'] == ITEM_CONVERT_WITH_UNITS))) {
+		if (preg_match('/\.\d+$/', $options['value'])) {
+			$format = (abs($options['value']) >= ZBX_UNITS_ROUNDOFF_THRESHOLD)
+				? '%.'.ZBX_UNITS_ROUNDOFF_UPPER_LIMIT.'f'
+				: '%.'.ZBX_UNITS_ROUNDOFF_LOWER_LIMIT.'f';
+			$options['value'] = sprintf($format, $options['value']);
+		}
+		$options['value'] = preg_replace('/^([\-0-9]+)(\.)([0-9]*)[0]+$/U', '$1$2$3', $options['value']);
+		$options['value'] = rtrim($options['value'], '.');
+
+		return trim($options['value'].' '.$options['units']);
+	}
+
+	// if one or more items is B or Bps, then Y-scale use base 8 and calculated in bytes
+	if ($options['byteStep']) {
+		$step = 1024;
+	}
+	else {
+		switch ($options['units']) {
+			case 'Bps':
+			case 'B':
+				$step = 1024;
+				$options['convert'] = $options['convert'] ? $options['convert'] : ITEM_CONVERT_NO_UNITS;
+				break;
+			case 'b':
+			case 'bps':
+				$options['convert'] = $options['convert'] ? $options['convert'] : ITEM_CONVERT_NO_UNITS;
+			default:
+				$step = 1000;
+		}
+	}
+
+	if ($options['value'] < 0) {
+		$abs = bcmul($options['value'], '-1');
+	}
+	else {
+		$abs = $options['value'];
+	}
+
+	if (bccomp($abs, 1) == -1) {
+		$options['value'] = round($options['value'], ZBX_UNITS_ROUNDOFF_MIDDLE_LIMIT);
+		$options['value'] = ($options['length'] && $options['value'] != 0)
+			? sprintf('%.'.$options['length'].'f',$options['value']) : $options['value'];
+
+		return trim($options['value'].' '.$options['units']);
+	}
+
+	// init intervals
+	static $digitUnits;
+	if (is_null($digitUnits)) {
+		$digitUnits = [];
+	}
+
+	if (!isset($digitUnits[$step])) {
+		$digitUnits[$step] = [
+			['pow' => 0, 'short' => ''],
+			['pow' => 1, 'short' => 'K'],
+			['pow' => 2, 'short' => 'M'],
+			['pow' => 3, 'short' => 'G'],
+			['pow' => 4, 'short' => 'T'],
+			['pow' => 5, 'short' => 'P'],
+			['pow' => 6, 'short' => 'E'],
+			['pow' => 7, 'short' => 'Z'],
+			['pow' => 8, 'short' => 'Y']
+		];
+
+		foreach ($digitUnits[$step] as $dunit => $data) {
+			// skip milli & micro for values without units
+			$digitUnits[$step][$dunit]['value'] = bcpow($step, $data['pow'], 9);
+		}
+	}
+
+
+	$valUnit = ['pow' => 0, 'short' => '', 'value' => $options['value']];
+
+	if ($options['pow'] === false || $options['value'] == 0) {
+		foreach ($digitUnits[$step] as $dnum => $data) {
+			if (bccomp($abs, $data['value']) > -1) {
+				$valUnit = $data;
+			}
+			else {
+				break;
+			}
+		}
+	}
+	else {
+		foreach ($digitUnits[$step] as $data) {
+			if ($options['pow'] == $data['pow']) {
+				$valUnit = $data;
+				break;
+			}
+		}
+	}
+
+	if (round($valUnit['value'], ZBX_UNITS_ROUNDOFF_MIDDLE_LIMIT) > 0) {
+		$valUnit['value'] = bcdiv(sprintf('%.10f',$options['value']), sprintf('%.10f', $valUnit['value'])
+			, ZBX_PRECISION_10);
+	}
+	else {
+		$valUnit['value'] = 0;
+	}
+
+	switch ($options['convert']) {
+		case 0: $options['units'] = trim($options['units']);
+		case 1: $desc = $valUnit['short']; break;
+	}
+
+	$options['value'] = preg_replace('/^([\-0-9]+)(\.)([0-9]*)[0]+$/U','$1$2$3', round($valUnit['value'],
+		ZBX_UNITS_ROUNDOFF_UPPER_LIMIT));
+
+	$options['value'] = rtrim($options['value'], '.');
+
+	// fix negative zero
+	if (bccomp($options['value'], 0) == 0) {
+		$options['value'] = 0;
+	}
+
+	return trim(sprintf('%s %s%s', $options['length']
+		? sprintf('%.'.$options['length'].'f',$options['value'])
+		: $options['value'], $desc, $options['units']));
+}
+
+// preserve keys
+function zbx_array_merge() {
+	$args = func_get_args();
+	$result = [];
+	foreach ($args as &$array) {
+		if (!is_array($array)) {
+			return false;
+		}
+		foreach ($array as $key => $value) {
+			$result[$key] = $value;
+		}
+	}
+	unset($array);
+
+	return $result;
+}
+
+function zbx_empty($value) {
+	if ($value === null) {
+		return true;
+	}
+	if (is_array($value) && empty($value)) {
+		return true;
+	}
+	if (is_string($value) && $value === '') {
+		return true;
+	}
+
+	return false;
+}
