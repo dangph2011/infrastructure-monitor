@@ -68,3 +68,9 @@ define('INTERFACE_TYPE_JMX',		4);
 // suffixes
 define('ZBX_BYTE_SUFFIXES', 'KMGT');
 define('ZBX_TIME_SUFFIXES', 'smhdw');
+
+define('ZBX_DB_MAX_ID', '9223372036854775807');
+define('UNRESOLVED_MACRO_STRING', '*'._('UNKNOWN').'*');
+
+define('INTERFACE_SECONDARY',	0);
+define('INTERFACE_PRIMARY',		1);

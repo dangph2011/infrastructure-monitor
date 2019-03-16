@@ -1,6 +1,9 @@
 <?php
 
 namespace App\Macros;
+
+use Illuminate\Support\Facades\DB;
+
 /*
 ** Zabbix
 ** Copyright (C) 2001-2019 Zabbix SIA
@@ -633,19 +636,29 @@ class CMacrosResolverGeneral {
 			return $macro_values;
 		}
 
-		$result = DBselect(
-			'SELECT f.triggerid,f.functionid,n.ip,n.dns,n.type,n.useip,n.port'.
-			' FROM functions f'.
-				' JOIN items i ON f.itemid=i.itemid'.
-				' JOIN interface n ON i.hostid=n.hostid'.
-			' WHERE '.dbConditionInt('f.functionid', array_keys($macros)).
-				' AND n.main=1'
-		);
+		// $result = DBselect(
+		// 	'SELECT f.triggerid,f.functionid,n.ip,n.dns,n.type,n.useip,n.port'.
+		// 	' FROM functions f'.
+		// 		' JOIN items i ON f.itemid=i.itemid'.
+		// 		' JOIN interface n ON i.hostid=n.hostid'.
+		// 	' WHERE '.dbConditionInt('f.functionid', array_keys($macros)).
+		// 		' AND n.main=1'
+        // );
+
+        $result = DB::connection(getGlobalDatabaseConnection())
+                    ->table('functions f')
+                    ->join('items i', 'i.itemid', '=', 'f.itemid')
+                    ->join('interface n', 'n.hostid', '=', 'i.hostid')
+                    ->whereIn('f.functionid', array_keys($macros))
+                    ->select('f.triggerid', 'f.functionid', 'n.ip', 'n.dns', 'n.type', 'n.useip', 'n.port')
+                    ->get();
 
 		// Macro should be resolved to interface with highest priority ($priorities).
 		$interfaces = [];
 
-		while ($row = DBfetch($result)) {
+		// while ($row = DBfetch($result)) {
+        foreach ($result as $row) {
+            $row = get_object_vars($row);
 			if (array_key_exists($row['functionid'], $interfaces)
 					&& $this->interfacePriorities[$interfaces[$row['functionid']]['type']]
 						> $this->interfacePriorities[$row['type']]) {
@@ -697,16 +710,25 @@ class CMacrosResolverGeneral {
 			return $macro_values;
 		}
 
-		$functions = DbFetchArray(DBselect(
-			'SELECT f.triggerid,f.functionid,i.itemid,i.value_type,i.units,i.valuemapid'.
-			' FROM functions f'.
-				' JOIN items i ON f.itemid=i.itemid'.
-				' JOIN hosts h ON i.hostid=h.hostid'.
-			' WHERE '.dbConditionInt('f.functionid', array_keys($macros))
-		));
+		// $functions = DbFetchArray(DBselect(
+		// 	'SELECT f.triggerid,f.functionid,i.itemid,i.value_type,i.units,i.valuemapid'.
+		// 	' FROM functions f'.
+		// 		' JOIN items i ON f.itemid=i.itemid'.
+		// 		' JOIN hosts h ON i.hostid=h.hostid'.
+		// 	' WHERE '.dbConditionInt('f.functionid', array_keys($macros))
+        // ));
+
+        $functions = DB::connection(getGlobalDatabaseConnection())
+                        ->table('functions f')
+                        ->join('items i', 'i.itemid', '=', 'f.itemid')
+                        ->join('hosts h', 'h.hostid', '=', 'i.hostid')
+                        ->whereIn('f.functionid', array_keys($macros))
+                        ->select('f.triggerid', 'f.functionid', 'i.itemid', 'i.value_type', 'i.units', 'i.valuemapid')
+                        ->get();
 
 		// False passed to DBfetch to get data without null converted to 0, which is done by default.
 		foreach ($functions as $function) {
+            $function = get_object_vars($function);
 			foreach ($macros[$function['functionid']] as $macro => $tokens) {
 				if ($macro === 'ITEM.VALUE' || $macro === 'ITEM.LASTVALUE') {
 					$history = Manager::History()->getLastValues([$function], 1, ZBX_HISTORY_PERIOD);
@@ -773,15 +795,28 @@ class CMacrosResolverGeneral {
 			return $macro_values;
 		}
 
-		$result = DBselect(
-			'SELECT f.triggerid,f.functionid,h.hostid,h.host,h.name'.
-			' FROM functions f'.
-				' JOIN items i ON f.itemid=i.itemid'.
-				' JOIN hosts h ON i.hostid=h.hostid'.
-			' WHERE '.dbConditionInt('f.functionid', array_keys($macros))
-		);
+        $databaseConnection = getGlobalDatabaseConnection();
+        $result = DB::connection($databaseConnection)->table('functions as f')
+                    ->join('items as i', 'i.itemid', '=', 'f.itemid')
+                    ->join('hosts as h', 'h.hostid', '=', 'i.hostid')
+                    ->whereIn('f.functionid', array_keys($macros))
+                    ->select('f.triggerid', 'f.functionid', 'h.hostid', 'h.host', 'h.name')
+                    ->get();
 
-		while ($row = DBfetch($result)) {
+		// $result = DBselect(
+		// 	'SELECT f.triggerid,f.functionid,h.hostid,h.host,h.name'.
+		// 	' FROM functions f'.
+		// 		' JOIN items i ON f.itemid=i.itemid'.
+		// 		' JOIN hosts h ON i.hostid=h.hostid'.
+		// 	' WHERE '.dbConditionInt('f.functionid', array_keys($macros))
+        // );
+
+        // dd($result);
+        // $result = get_object_vars($result);
+
+        foreach($result as $row) {
+            $row = get_object_vars($row);
+		// while ($row = DBfetch($result)) {
 			foreach ($macros[$row['functionid']] as $macro => $tokens) {
 				switch ($macro) {
 					case 'HOST.ID':
@@ -802,7 +837,8 @@ class CMacrosResolverGeneral {
 					$macro_values[$row['triggerid']][$token['token']] = $value;
 				}
 			}
-		}
+        }
+        // dd($macro_values);
 
 		return $macro_values;
 	}
@@ -870,12 +906,20 @@ class CMacrosResolverGeneral {
 			do {
 				$hostids = array_keys($hostids);
 
-				$db_host_macros = DBselect(
-					'SELECT hm.hostid,hm.macro,hm.value'.
-					' FROM hostmacro hm'.
-					' WHERE '.dbConditionInt('hm.hostid', $hostids)
-				);
-				while ($db_host_macro = DBfetch($db_host_macros)) {
+                $db_host_macros=DB::connection(getGlobalDatabaseConnection())
+                                ->table('hostmacro hm')
+                                ->whereIn('hostid', $hostids)
+                                ->select('hostid', 'macro', 'value')
+                                ->get();
+
+				// $db_host_macros = DBselect(
+				// 	'SELECT hm.hostid,hm.macro,hm.value'.
+				// 	' FROM hostmacro hm'.
+				// 	' WHERE '.dbConditionInt('hm.hostid', $hostids)
+				// );
+				// while ($db_host_macro = DBfetch($db_host_macros)) {
+                foreach ($db_host_macros as $db_host_macro) {
+                    $db_host_macro = get_object_vars($db_host_macro);
 					if ($user_macro_parser->parse($db_host_macro['macro']) != CParser::PARSE_SUCCESS) {
 						continue;
 					}
@@ -903,13 +947,20 @@ class CMacrosResolverGeneral {
 					$host_templates[$hostid] = [];
 				}
 
-				$templateids = [];
-				$db_host_templates = DBselect(
-					'SELECT ht.hostid,ht.templateid'.
-					' FROM hosts_templates ht'.
-					' WHERE '.dbConditionInt('ht.hostid', $hostids)
-				);
-				while ($db_host_template = DBfetch($db_host_templates)) {
+                $templateids = [];
+                $db_host_templates = DB::connection(getGlobalDatabaseConnection())
+                                        ->table('hosts_templates ht')
+                                        ->whereIn('hostid', $hostids)
+                                        ->select('hostid', 'templateid')
+                                        ->get();
+				// $db_host_templates = DBselect(
+				// 	'SELECT ht.hostid,ht.templateid'.
+				// 	' FROM hosts_templates ht'.
+				// 	' WHERE '.dbConditionInt('ht.hostid', $hostids)
+				// );
+                foreach($db_host_templates as $db_host_template) {
+                    $db_host_template = get_object_vars($db_host_template);
+                // while ($db_host_template = DBfetch($db_host_templates)) {
 					$host_templates[$db_host_template['hostid']][] = $db_host_template['templateid'];
 					$templateids[$db_host_template['templateid']] = true;
 				}

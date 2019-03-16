@@ -141,6 +141,9 @@ function createShapeLayoutByItem($items, $databaseConnection) {
                     $trigger['expression'], $arr)) {
                 continue;
             }
+            // dd($trigger);
+            CMacrosResolverHelper::resolveTriggerName($trigger->toArray());
+
             $constant = $arr[3].$arr[4];
             $shape = createShapeLayout($constant, $config['severity_color_' . $trigger->priority], $trigger->description);
             $shapes->push($shape);
@@ -333,6 +336,14 @@ function createDatabaseConnection($key, $driver, $host, $port, $database, $usern
     $config['collation'] = $collation;
     $config['engine'] = $engine;
     Config::set('database.connections.' . $key, $config);
+}
+
+function setGlobalDatabaseConnection($databaseConnection) {
+    Config::set('global.databaseConnection', $databaseConnection);
+}
+
+function getGlobalDatabaseConnection() {
+    return Config::get('global.databaseConnection');
 }
 
 function createDatabaseConnectionByDatabaseName($key, $database) {

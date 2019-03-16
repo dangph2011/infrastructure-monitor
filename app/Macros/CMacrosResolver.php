@@ -2,6 +2,9 @@
 
 namespace App\Macros;
 
+use Illuminate\Support\Facades\DB;
+
+
 /*
 ** Zabbix
 ** Copyright (C) 2001-2019 Zabbix SIA
@@ -104,7 +107,7 @@ class CMacrosResolver extends CMacrosResolverGeneral {
 	 * @return array		(as $hostid => array(texts))
 	 */
 	private function resolveTexts(array $data) {
-		$types = [];
+        $types = [];
 
 		if ($this->isTypeAvailable('host')) {
 			$types['macros']['host'] = ['{HOSTNAME}', '{HOST.HOST}', '{HOST.NAME}'];
@@ -158,15 +161,24 @@ class CMacrosResolver extends CMacrosResolverGeneral {
 			}
 		}
 
-		// Host macros.
-		if ($host_hostids) {
-			$dbHosts = DBselect(
-				'SELECT h.hostid,h.name,h.host'.
-				' FROM hosts h'.
-				' WHERE '.dbConditionInt('h.hostid', array_keys($host_hostids))
-			);
+        // Host macros.
+        $globalDatabaseConnection = getGlobalDatabaseConnection();
 
-			while ($dbHost = DBfetch($dbHosts)) {
+		if ($host_hostids) {
+            $dbHosts = Host::on($globalDatabaseConnection)
+                ->whereIn('hostid', array_keys($host_hostids))
+                    ->pluck('hostid', 'name', 'host');
+
+            // dd($dbHosts);
+			// $dbHosts = DBselect(
+			// 	'SELECT h.hostid,h.name,h.host'.
+			// 	' FROM hosts h'.
+			// 	' WHERE '.dbConditionInt('h.hostid', array_keys($host_hostids))
+			// );
+
+            foreach ($dbHosts as $dbHost) {
+			// while ($dbHost = DBfetch($dbHosts)) {
+                $dbHost = get_object_vars($dbHost);
 				$hostid = $dbHost['hostid'];
 
 				if (array_key_exists($hostid, $macros)) {
@@ -189,15 +201,24 @@ class CMacrosResolver extends CMacrosResolverGeneral {
 
 		// Interface macros, macro should be resolved to main agent interface.
 		if ($this->isTypeAvailable('agentInterface') && $interface_hostids) {
-			$dbInterfaces = DBselect(
-				'SELECT i.hostid,i.ip,i.dns,i.useip'.
-				' FROM interface i'.
-				' WHERE i.main='.INTERFACE_PRIMARY.
-					' AND i.type='.INTERFACE_TYPE_AGENT.
-					' AND '.dbConditionInt('i.hostid', array_keys($interface_hostids))
-			);
+            $dbInterfaces = DB::connection($globalDatabaseConnection)
+                                ->table('interface as i')
+                                ->where('main', INTERFACE_PRIMARY)
+                                ->where('type', INTERFACE_TYPE_AGENT)
+                                ->whereIn('hostid', array_keys($interface_hostids))
+                                ->select('hostid', 'ip', 'dns', 'useip')
+                                ->get();
+			// $dbInterfaces = DBselect(
+			// 	'SELECT i.hostid,i.ip,i.dns,i.useip'.
+			// 	' FROM interface i'.
+			// 	' WHERE i.main='.INTERFACE_PRIMARY.
+			// 		' AND i.type='.INTERFACE_TYPE_AGENT.
+			// 		' AND '.dbConditionInt('i.hostid', array_keys($interface_hostids))
+			// );
 
-			while ($dbInterface = DBfetch($dbInterfaces)) {
+            foreach($dbInterfaces as $dbInterface) {
+			// while ($dbInterface = DBfetch($dbInterfaces)) {
+                $dbInterface = get_object_vars($dbInterface);
 				$hostid = $dbInterface['hostid'];
 
 				$dbInterfaceTexts = [$dbInterface['ip'], $dbInterface['dns']];
@@ -242,15 +263,25 @@ class CMacrosResolver extends CMacrosResolverGeneral {
 
 		// Interface macros, macro should be resolved to interface with highest priority.
 		if ($this->isTypeAvailable('interfaceWithoutPort') && $interface_hostids) {
-			$interfaces_by_priority = [];
+            $interfaces_by_priority = [];
 
-			$interfaces = DBfetchArray(DBselect(
-				'SELECT i.hostid,i.interfaceid,i.ip,i.dns,i.useip,i.port,i.type,i.main'.
-				' FROM interface i'.
-				' WHERE i.main='.INTERFACE_PRIMARY.
-					' AND '.dbConditionInt('i.hostid', array_keys($interface_hostids)).
-					' AND '.dbConditionInt('i.type', $this->interfacePriorities)
-			));
+            $interfaces = DB::connection($globalDatabaseConnection)
+                            ->table('interface as i')
+                            ->where('main', INTERFACE_PRIMARY)
+                            ->whereIn('hostid', array_keys($interface_hostids))
+                            ->whereIn('type',  $this->interfacePriorities)
+                            ->select('hostid', 'interfaceid', 'ip', 'dns', 'useip', 'port', 'type', 'main')
+                            ->get();
+
+            $interfaces = get_object_vars($interfaces);
+
+			// $interfaces = DBfetchArray(DBselect(
+			// 	'SELECT i.hostid,i.interfaceid,i.ip,i.dns,i.useip,i.port,i.type,i.main'.
+			// 	' FROM interface i'.
+			// 	' WHERE i.main='.INTERFACE_PRIMARY.
+			// 		' AND '.dbConditionInt('i.hostid', array_keys($interface_hostids)).
+			// 		' AND '.dbConditionInt('i.type', $this->interfacePriorities)
+			// ));
 
 			$interfaces = CMacrosResolverHelper::resolveHostInterfaces($interfaces);
 
@@ -761,19 +792,26 @@ class CMacrosResolver extends CMacrosResolverGeneral {
 		if ($functionids) {
 			$functions = [];
 
-			// Selecting functions.
-			$result = DBselect(
-				'SELECT f.functionid,f.itemid,f.name,f.parameter'.
-				' FROM functions f'.
-				' WHERE '.dbConditionInt('f.functionid', $functionids)
-			);
+            // Selecting functions.
+            $result = DB::connection(getGlobalDatabaseConnection())
+                        ->table('function as f')
+                        ->where('functionid', $functionids)
+                        ->select('functionid', 'itemid', 'name', 'parameter')
+                        ->get();
+			// $result = DBselect(
+			// 	'SELECT f.functionid,f.itemid,f.name,f.parameter'.
+			// 	' FROM functions f'.
+			// 	' WHERE '.dbConditionInt('f.functionid', $functionids)
+            // );
 
 			$hostids = [];
 			$itemids = [];
 			$hosts = [];
 			$items = [];
 
-			while ($row = DBfetch($result)) {
+            foreach($result as $row) {
+                $row = get_object_vars($row);
+			// while ($row = DBfetch($result)) {
 				$itemids[$row['itemid']] = true;
 				$row['function'] = $row['name'];
 				unset($row['name']);
@@ -784,20 +822,36 @@ class CMacrosResolver extends CMacrosResolverGeneral {
 
 			// Selecting items.
 			if ($itemids) {
+                $result = null;
 				if ($options['html']) {
-					$sql = 'SELECT i.itemid,i.hostid,i.key_,i.type,i.flags,i.status,i.state,id.parent_itemid'.
-						' FROM items i'.
-							' LEFT JOIN item_discovery id ON i.itemid=id.itemid'.
-						' WHERE '.dbConditionInt('i.itemid', array_keys($itemids));
+                    $result = DB::connection(getGlobalDatabaseConnection())
+                                ->table('items as i')
+                                ->leftJoin('item_discovery as id', 'i.itemid', '=', 'id.itemid')
+                                ->whereIn('itemid', array_keys($itemids))
+                                ->select('i.itemid', 'i.hostid', 'i.key_', 'i.type', 'i.flags', 'i.status', 'i.state', 'id.parent_itemid')
+                                ->get();
+
+					// $sql = 'SELECT i.itemid,i.hostid,i.key_,i.type,i.flags,i.status,i.state,id.parent_itemid'.
+					// 	' FROM items i'.
+					// 		' LEFT JOIN item_discovery id ON i.itemid=id.itemid'.
+					// 	' WHERE '.dbConditionInt('i.itemid', array_keys($itemids));
 				}
 				else {
-					$sql = 'SELECT i.itemid,i.hostid,i.key_'.
-						' FROM items i'.
-						' WHERE '.dbConditionInt('i.itemid', array_keys($itemids));
-				}
-				$result = DBselect($sql);
+                    $result = DB::connection(getGlobalDatabaseConnection())
+                        ->table('items as i')
+                        ->whereIn('itemid', array_keys($itemids))
+                        ->select('itemid', 'hostid', 'key_')
+                        ->get();
+					// $sql = 'SELECT i.itemid,i.hostid,i.key_'.
+					// 	' FROM items i'.
+					// 	' WHERE '.dbConditionInt('i.itemid', array_keys($itemids));
+                }
 
-				while ($row = DBfetch($result)) {
+				// $result = DBselect($sql);
+
+                foreach($result as $row) {
+                    $row = get_object_vars($row);
+				// while ($row = DBfetch($result)) {
 					$hostids[$row['hostid']] = true;
 					$items[$row['itemid']] = $row;
 				}
@@ -805,11 +859,19 @@ class CMacrosResolver extends CMacrosResolverGeneral {
 
 			// Selecting hosts.
 			if ($hostids) {
-				$result = DBselect(
-					'SELECT h.hostid,h.host FROM hosts h WHERE '.dbConditionInt('h.hostid', array_keys($hostids))
-				);
+                $result = DB::connection(getGlobalDatabaseConnection())
+                            ->table('hosts as h')
+                            ->whereIn('hostid', array_keys($hostids))
+                            ->select('hostid', 'host')
+                            ->get();
 
-				while ($row = DBfetch($result)) {
+				// $result = DBselect(
+				// 	'SELECT h.hostid,h.host FROM hosts h WHERE '.dbConditionInt('h.hostid', array_keys($hostids))
+				// );
+
+				// while ($row = DBfetch($result)) {
+                foreach($result as $row) {
+                    $row = get_object_vars($row);
 					$hosts[$row['hostid']] = $row;
 				}
 			}
@@ -1458,12 +1520,22 @@ class CMacrosResolver extends CMacrosResolverGeneral {
 				$interfaces_by_priority = [];
 
 				if ($hostids) {
-					$interfaces = DBfetchArray(DBselect(
-						'SELECT i.hostid,i.interfaceid,i.ip,i.dns,i.useip,i.port,i.type,i.main'.
-						' FROM interface i'.
-						' WHERE '.dbConditionInt('i.hostid', array_keys($hostids)).
-							' AND '.dbConditionInt('i.type', $this->interfacePriorities)
-					));
+                    //
+					// $interfaces = DBfetchArray(DBselect(
+					// 	'SELECT i.hostid,i.interfaceid,i.ip,i.dns,i.useip,i.port,i.type,i.main'.
+					// 	' FROM interface i'.
+					// 	' WHERE '.dbConditionInt('i.hostid', array_keys($hostids)).
+					// 		' AND '.dbConditionInt('i.type', $this->interfacePriorities)
+                    // ));
+
+                    $interfaces = DB::connection(getGlobalDatabaseConnection())
+                            ->table('interface i')
+                            ->whereIn('hostid', array_keys($hostids))
+                            ->whereIn('type',  $this->interfacePriorities)
+                            ->select('hostid', 'interfaceid', 'ip', 'dns', 'useip', 'port', 'type', 'main')
+                            ->get();
+
+                    $interfaces = get_object_vars($interfaces);
 
 					$interfaces = CMacrosResolverHelper::resolveHostInterfaces($interfaces);
 					$interfaces = zbx_toHash($interfaces, 'interfaceid');
@@ -1781,17 +1853,27 @@ class CMacrosResolver extends CMacrosResolverGeneral {
 
 			// Get host data if element is host.
 			if ($selement['elementtype'] == SYSMAP_ELEMENT_TYPE_HOST) {
-				$res = DBselect(
-					'SELECT hi.ip,hi.dns,hi.useip,h.host,h.name,h.description,hi.type AS interfacetype'.
-					' FROM interface hi,hosts h'.
-					' WHERE hi.hostid=h.hostid'.
-						' AND hi.main=1 AND hi.hostid='.zbx_dbstr($selement['elements'][0]['hostid'])
-				);
+				// $res = DBselect(
+				// 	'SELECT hi.ip,hi.dns,hi.useip,h.host,h.name,h.description,hi.type AS interfacetype'.
+				// 	' FROM interface hi,hosts h'.
+				// 	' WHERE hi.hostid=h.hostid'.
+				// 		' AND hi.main=1 AND hi.hostid='.zbx_dbstr($selement['elements'][0]['hostid'])
+                // );
+
+                $res = DB::connection(getGlobalDatabaseConnection())
+                        ->table('interface hi, hosts h')
+                        ->where('hi.hostid', 'h.hostid')
+                        ->where('hi.main', 1)
+                        ->where('hi.hostid', $selement['elements'][0]['hostid'])
+                        ->select('hi.ip', 'hi.dns', 'hi.useip', 'h.host', 'h.name', 'h.description', 'hi.type as interfacetype')
+                        ->get();
 
 				// Process interface priorities.
 				$tmpPriority = 0;
 
-				while ($dbHost = DBfetch($res)) {
+				// while ($dbHost = DBfetch($res)) {
+                foreach ($res as $dbHost) {
+                    $dbHost = get_object_vars($dbHost);
 					if ($priorities[$dbHost['interfacetype']] > $tmpPriority) {
 						$resHost = $dbHost;
 						$tmpPriority = $priorities[$dbHost['interfacetype']];
@@ -1802,20 +1884,33 @@ class CMacrosResolver extends CMacrosResolverGeneral {
 			}
 			// Get trigger host list if element is trigger.
 			else {
-				$res = DBselect(
-					'SELECT hi.ip,hi.dns,hi.useip,h.host,h.name,h.description,f.functionid,hi.type AS interfacetype'.
-					' FROM interface hi,items i,functions f,hosts h'.
-					' WHERE h.hostid=hi.hostid'.
-						' AND hi.hostid=i.hostid'.
-						' AND i.itemid=f.itemid'.
-						' AND hi.main=1 AND f.triggerid='.zbx_dbstr($selement['elements'][0]['triggerid']).
-					' ORDER BY f.functionid'
-				);
+				// $res = DBselect(
+				// 	'SELECT hi.ip,hi.dns,hi.useip,h.host,h.name,h.description,f.functionid,hi.type AS interfacetype'.
+				// 	' FROM interface hi,items i,functions f,hosts h'.
+				// 	' WHERE h.hostid=hi.hostid'.
+				// 		' AND hi.hostid=i.hostid'.
+				// 		' AND i.itemid=f.itemid'.
+				// 		' AND hi.main=1 AND f.triggerid='.zbx_dbstr($selement['elements'][0]['triggerid']).
+				// 	' ORDER BY f.functionid'
+                // );
+
+                $res = DB::connection(getGlobalDatabaseConnection())
+                        ->table('interface hi,items i,functions f,hosts h')
+                        ->where('h.hostid', 'i.hostid')
+                        ->where('i.itemid', 'f.itemid')
+                        ->where('hi.main', 1)
+                        ->where('f.triggerid', $selement['elements'][0]['triggerid'])
+                        ->orderBy('f.functionid')
+                        ->select('hi.ip', 'hi.dns', 'hi.use', 'h.host', 'h.name', 'h.description','f.functionid', 'hi.type as interfacetype')
+                        ->get();
+
 
 				// Process interface priorities, build $hostsByFunctionId array.
 				$tmpFunctionId = -1;
 
-				while ($dbHost = DBfetch($res)) {
+				// while ($dbHost = DBfetch($res)) {
+                foreach ($res as $dbHost){
+                    $dbHost = get_object_vars($dbHost);
 					if ($dbHost['functionid'] != $tmpFunctionId) {
 						$tmpPriority = 0;
 						$tmpFunctionId = $dbHost['functionid'];

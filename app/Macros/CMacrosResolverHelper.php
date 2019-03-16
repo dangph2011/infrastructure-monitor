@@ -1,6 +1,9 @@
 <?php
 
 namespace App\Macros;
+
+use Illuminate\Support\Facades\DB;
+
 /*
 ** Zabbix
 ** Copyright (C) 2001-2019 Zabbix SIA
@@ -380,16 +383,26 @@ class CMacrosResolverHelper {
 			}
 		}
 
-		$items = DBfetchArray(DBselect(
-			'SELECT i.hostid,gi.graphid,h.host'.
-			' FROM graphs_items gi,items i,hosts h'.
-			' WHERE gi.itemid=i.itemid'.
-				' AND i.hostid=h.hostid'.
-				' AND '.dbConditionInt('gi.graphid', $graphIds).
-			' ORDER BY gi.sortorder'
-		));
+        $items = DB::connection(getGlobalDatabaseConnection())
+                ->table('graphs_items gi,items i,hosts h')
+                ->where('gi.itemid', 'i.itemid')
+                ->where('i.hostid', 'h.hostid')
+                ->whereIn('gi.graphid', $graphIds)
+                ->orderBy('gi.sortorder')
+                ->select('i.hostid', 'gi.graphid', 'h.host')
+                ->get();
+
+		// $items = DBfetchArray(DBselect(
+		// 	'SELECT i.hostid,gi.graphid,h.host'.
+		// 	' FROM graphs_items gi,items i,hosts h'.
+		// 	' WHERE gi.itemid=i.itemid'.
+		// 		' AND i.hostid=h.hostid'.
+		// 		' AND '.dbConditionInt('gi.graphid', $graphIds).
+		// 	' ORDER BY gi.sortorder'
+		// ));
 
 		foreach ($items as $item) {
+            $item = get_object_vars($item);
 			$graphMap[$item['graphid']]['items'][] = ['hostid' => $item['hostid'], 'host' => $item['host']];
 		}
 
