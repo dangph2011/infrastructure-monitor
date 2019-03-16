@@ -88,14 +88,17 @@
     <script>
         var data = {!!$data!!};
         var layout = {!!$layout!!}
-        var myDiv = document.getElementById('plotid')
-        Plotly.newPlot(myDiv, data, layout);
-        console.log("Height: ", myDiv.offsetHeight);
-        console.log("Width: ", myDiv.offsetWidth);
+        // layout.width = 1000;
+        // layout.height = 800;
+        var myDiv = document.getElementById('plotid');
+        Plotly.newPlot(myDiv, data, layout).then(gd => {
+            gd.on('plotly_legendclick', () => false)
+        });
+
+        $yAxisPosition = parseInt($('tspan').attr('y'),10) + 50;
         if ({{$graphtype}} != 2) {
-            document.getElementsByClassName('legend')[0].setAttribute("transform", "translate(50," + (myDiv.offsetHeight - 100)+")");
+            document.getElementsByClassName('legend')[0].setAttribute("transform", "translate(50," + ($yAxisPosition)  +")");
         }
-        // $('#plotid g.xy').attr('transform') == $('#plotid g.legend').attr('transform').replace(/ /g, '')
 
         function generatePDF() {
             $("#savePdf").hide();
