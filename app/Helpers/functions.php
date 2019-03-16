@@ -255,7 +255,7 @@ function getDataAndLayoutFromGraph($graphid, $databaseConnection)
                 createYAxisLayoutLine(null, null,  $items[0]->units, true),
                 $graph->name
             );
-            $layout = $layout->union(setOrientedLegend(true, "v", 0, -1));
+            $layout = $layout->union(setOrientedLegend(true, "h", 0, -1));
 
         } elseif ($graph->graphtype == GRAPH_TYPE_STACKED) {
             //Draw stacked (area chart)
@@ -278,7 +278,7 @@ function getDataAndLayoutFromGraph($graphid, $databaseConnection)
                 $graph->name
             );
 
-            $layout = $layout->union(setOrientedLegend(true, "v", 0, -1));
+            $layout = $layout->union(setOrientedLegend(true, "h", 0, -1));
 
         } elseif ($graph->graphtype == GRAPH_TYPE_PIE) {
             //Draw pie graph

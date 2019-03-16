@@ -92,7 +92,9 @@
         Plotly.newPlot(myDiv, data, layout);
         console.log("Height: ", myDiv.offsetHeight);
         console.log("Width: ", myDiv.offsetWidth);
-        // document.getElementsByClassName('legend')[0].setAttribute("transform", "translate(50, 400)");
+        if ({{$graphtype}} != 2) {
+            document.getElementsByClassName('legend')[0].setAttribute("transform", "translate(50," + (myDiv.offsetHeight - 100)+")");
+        }
         // $('#plotid g.xy').attr('transform') == $('#plotid g.legend').attr('transform').replace(/ /g, '')
 
         function generatePDF() {

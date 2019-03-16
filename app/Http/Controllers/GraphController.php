@@ -92,10 +92,16 @@ class GraphController extends Controller
         $data = collect();
         $layout = collect();
         list($data, $layout) = getDataAndLayoutFromGraph($rq_graphid, $databaseConnection);
-        // dd($tracers);
+
+        $graphtype = 0;
+        if ($rq_graphid != 0) {
+            $graph = Graph::on(getGlobalDatabaseConnection())->find($rq_graphid);
+            $graphtype = $graph->graphtype;
+        }
+        // dd($graphtype);
         // return $layout;
         // return $data;
-        return view('graphs.view', compact('groups', 'hosts', 'rq_groupid', 'graphs', 'rq_hostid', 'data', 'layout', 'rq_graphid', 'localServers', 'requestLocalId'));
+        return view('graphs.view', compact('groups', 'hosts', 'rq_groupid', 'graphs', 'rq_hostid', 'data', 'layout', 'rq_graphid', 'localServers', 'requestLocalId', 'graphtype'));
     }
 
     public function create()
