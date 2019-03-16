@@ -21,7 +21,7 @@ class Item extends Model
 
     public function graphs()
     {
-        return $this->belongsToMany(Graph::class, 'graphs_items', 'itemid', 'graphid');
+        return $this->belongsToMany(Graph::class, 'graphs_items', 'itemid', 'graphid')->withPivot('type', 'drawtype', 'color', 'sortorder');
     }
 
     public function triggers()

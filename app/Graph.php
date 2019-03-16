@@ -17,7 +17,7 @@ class Graph extends Model
 
     public function items()
     {
-        return $this->belongsToMany(Item::class, 'graphs_items', 'graphid', 'itemid')->withPivot('type');
+        return $this->belongsToMany(Item::class, 'graphs_items', 'graphid', 'itemid')->withPivot('type', 'drawtype', 'color', 'sortorder');
     }
 
     public function getGraphByGroupAndHost($hostids)

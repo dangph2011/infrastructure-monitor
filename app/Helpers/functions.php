@@ -36,13 +36,15 @@ function createSelectorOption($step, $stepMode, $count, $lable)
     ]);
 }
 
-function createDataLine($x_data, $y_data, $mode, $name = null, $connectgaps = true, $size = null, $color = null, $dash = "solid")
+function createDataLine($x_data, $y_data, $mode, $name = null, $connectgaps = true, $size = null, $color = null, $dash = "solid", $fill = "none", $fillcolor = null)
 {
     return collect([
         "x" => $x_data,
         "y" => $y_data,
         "mode" => $mode,
         "name" => $name,
+        "fill" => $fill,
+        "fillcolor" => $fillcolor,
         "connectgaps" => $connectgaps,
         "line" => [
             "width" => $size,
@@ -230,7 +232,7 @@ function getDataAndLayoutFromGraph($graphid, $databaseConnection)
 
     if ($graphid != 0) {
         $graph = $GRAPH->find($graphid);
-        $items = $GRAPH->find($graphid)->items;
+        $items = $GRAPH->find($graphid)->items->sortBy('pivot_sortorder');
 
         if ($graph->graphtype == GRAPH_TYPE_NORMAL) {
             //onlye show trigger in line graph
@@ -238,13 +240,55 @@ function getDataAndLayoutFromGraph($graphid, $databaseConnection)
 
             $items->each(function ($item) use ($data, $ITEM, $databaseConnection) {
                 //get data
+                $fill = "none";
+                $color = $item->pivot->color;
+                $dash = "solid";
+                $size = "1.25";
+                $fillcolor = null;
+
+                // dd($item->pivot->drawtype);
+
+                switch ($item->pivot->drawtype) {
+                    case GRAPH_ITEM_DRAWTYPE_LINE:
+                        break;
+
+                    case GRAPH_ITEM_DRAWTYPE_FILLED_REGION:
+                        $fillcolor = $item->pivot->color;
+                        $fill = "tozeroy";
+                        break;
+
+                    case GRAPH_ITEM_DRAWTYPE_BOLD_LINE:
+                        $size = "2";
+                        break;
+
+                    case GRAPH_ITEM_DRAWTYPE_DOT:
+                        $dash = "dot";
+                        break;
+
+                    case GRAPH_ITEM_DRAWTYPE_DASHED_LINE:
+                        $dash = "dash";
+                        break;
+
+                    case GRAPH_ITEM_DRAWTYPE_GRADIENT_LINE:
+                        $fill = "tozeroy";
+                        break;
+
+                    case GRAPH_ITEM_DRAWTYPE_BOLD_DOT:
+                        $size = "2";
+                        $dash = "dot";
+                        break;
+
+                    default:
+                        break;
+                }
+
                 $clockValue = getClockAndValueNumericData($item->itemid, $item->value_type, $databaseConnection);
                 //get delay time to handle gaps data
                 $delayTime = $ITEM->convertToTimestamp($item->delay);
                 //add null to gaps data
                 smoothClockData($clockValue, $delayTime);
 
-                $data->push(createDataLine($clockValue[0], $clockValue[1], "lines", $item->name, false, 1.5));
+                $data->push(createDataLine($clockValue[0], $clockValue[1], "lines", $item->name, false,  $size, $color, $dash, $fill, $fillcolor));
             });
             //Draw line graph
 
