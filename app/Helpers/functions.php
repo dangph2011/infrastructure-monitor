@@ -117,7 +117,7 @@ function createDataStacked($x_data, $y_data, $stackgroup, $groupnorm, $connectga
     ]);
 }
 
-function smoothClockData($clockValue, $delayTime)
+function smoothClockData($clockValue, $delayTime, $smooth = true)
 {
     //add null to missing data
     $timestamp = 0;
@@ -126,7 +126,9 @@ function smoothClockData($clockValue, $delayTime)
             if ($clockValue[0][$key] - $timestamp > (2 * $delayTime)) {
                 $clockValue[0]->splice($key, 0, $timestamp + $delayTime);
                 $clockValue[1]->splice($key, 0, "null");
-                $key++;
+                if ($smooth) {
+                    $key++;
+                }
             }
         }
         $timestamp = $clockValue[0][$key];
@@ -309,7 +311,7 @@ function getDataAndLayoutFromGraph($graphid, $databaseConnection)
                 //get delay time to handle gaps data
                 $delayTime = $ITEM->convertToTimestamp($item->delay);
                 //add null to gaps data
-                smoothClockData($clockValue, $delayTime);
+                smoothClockData($clockValue, $delayTime, false);
                 //create data stacked
                 $data->push(createDataStacked($clockValue[0], $clockValue[1], "one", "percent"));
             });
