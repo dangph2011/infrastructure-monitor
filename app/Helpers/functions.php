@@ -36,7 +36,7 @@ function createSelectorOption($step, $stepMode, $count, $lable)
     ]);
 }
 
-function createDataLine($x_data, $y_data, $mode, $name = null, $connectgaps = true, $size = null, $color = null, $dash = "solid", $fill = "none", $fillcolor = null)
+function createDataLine($x_data, $y_data, $mode, $name = null, $connectgaps = true, $size = null, $color = null, $dash = "solid", $fill = "none", $fillcolor = null, $stackgroup = null, $groupnorm = null)
 {
     return collect([
         "x" => $x_data,
@@ -51,6 +51,9 @@ function createDataLine($x_data, $y_data, $mode, $name = null, $connectgaps = tr
             "color" => $color,
             "dash" => $dash
         ],
+        "stackgroup" => $stackgroup,
+        "groupnorm" => $groupnorm,
+
         // "type" => 'scatter',
     ]);
 }
@@ -86,8 +89,6 @@ function createLayoutLine($xaxis = null, $yaxis = null, $title = null)
     ]);
 }
 
-
-
 function createLayoutTitle($title = null)
 {
     return collect([
@@ -106,14 +107,16 @@ function createDataPie($value, $lable, $textinfo)
     ]);
 }
 
-function createDataStacked($x_data, $y_data, $stackgroup, $groupnorm, $connectgaps = true)
+function createDataStacked($x_data, $y_data, $name, $stackgroup, $groupnorm, $fillcolor = null, $connectgaps = true)
 {
     return collect([
         "x" => $x_data,
         "y" => $y_data,
+        "name" => $name,
         "connectgaps" => $connectgaps,
         "stackgroup" => $stackgroup,
         "groupnorm" => $groupnorm,
+        "fillcolor" => $fillcolor
     ]);
 }
 
@@ -236,9 +239,12 @@ function getDataAndLayoutFromGraph($graphid, $databaseConnection)
         $graph = $GRAPH->find($graphid);
         $items = $GRAPH->find($graphid)->items->sortBy('pivot_sortorder');
 
+        if ($graph->show_triggers) {
+            $shapes = createTriggerShape($items, $databaseConnection);
+        }
+
         if ($graph->graphtype == GRAPH_TYPE_NORMAL) {
             //onlye show trigger in line graph
-            $shapes = createTriggerShape($items, $databaseConnection);
 
             $items->each(function ($item) use ($data, $ITEM, $databaseConnection) {
                 //get data
@@ -307,13 +313,20 @@ function getDataAndLayoutFromGraph($graphid, $databaseConnection)
             //Draw stacked (area chart)
             $items->each(function ($item) use ($data, $ITEM, $databaseConnection) {
                 //get data
+                $fill = null;
+                $color = $item->pivot->color;
+                $dash = "solid";
+                $size = "1";
+                $fillcolor = $item->pivot->color;
+
                 $clockValue = getClockAndValueNumericData($item->itemid, $item->value_type, $databaseConnection, 'trends');
                 //get delay time to handle gaps data
                 $delayTime = $ITEM->convertToTimestamp($item->delay);
                 //add null to gaps data
                 smoothClockData($clockValue, $delayTime, false);
                 //create data stacked
-                $data->push(createDataStacked($clockValue[0], $clockValue[1], "one", "percent"));
+                $data->push(createDataLine($clockValue[0], $clockValue[1], null, $item->name, false,  null, $color, null, $fill, $fillcolor,"one", "percent"));
+                // $data->push(createDataStacked($clockValue[0], $clockValue[1], $item->name, "one", "percent", $fillcolor));
             });
             //Draw line graph
             $rangeslider = collect();
