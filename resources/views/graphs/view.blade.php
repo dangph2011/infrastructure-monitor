@@ -88,17 +88,76 @@
     <script>
         var data = {!!$data!!};
         var layout = {!!$layout!!}
+        console.log("data old: ", data);
         // layout.width = 1000;
         // layout.height = 800;
         var myDiv = document.getElementById('plotid');
-        Plotly.newPlot(myDiv, data, layout).then(gd => {
+        Plotly.plot(myDiv, data, layout).then(gd => {
             gd.on('plotly_legendclick', () => false)
         });
 
-        $yAxisPosition = parseInt($('tspan').attr('y'),10) + 50;
-        if ({{$graphtype}} != 2) {
-            document.getElementsByClassName('legend')[0].setAttribute("transform", "translate(50," + ($yAxisPosition)  +")");
+        var updateTracert = new Array();
+        for (var i = 0; i < data.length; i++) {
+            updateTracert.push(i);
         }
+
+        var requestId = {{$rq_graphid}};
+
+        if (requestId > 0) {
+            var itemIds = {{getListItemIdByGraphId($rq_graphid, getGlobalDatabaseConnection())}};
+            var lengthItemIds = itemIds.length;
+            var from = [];
+            var to = [];
+            var itemInfos = [];
+            for (var i = 0; i < lengthItemIds; i++) {
+                var itemInfo = {};
+                itemInfo.itemId = itemIds[i];
+                itemInfo.from = {{$to}};
+                itemInfo.to = Math.floor(Date.now() / 1000)
+                itemInfos.push(itemInfo);
+            }
+
+            var interval = setInterval(function() {
+                for (var i = 0; i < itemInfos.length; i++) {
+                    itemInfos[i].to = Math.floor(Date.now() / 1000)
+                }
+                $.ajax({
+                    type: 'GET',
+                    url: '/ajax/chart/item',
+                    data: {
+                        "databaseConnection": "{{getGlobalDatabaseConnection()}}",
+                        "itemInfos": JSON.stringify(itemInfos),
+                    },
+                    dataType: 'json',
+                    success: function (res) {
+                        console.log("res: ", res);
+                        console.log("from: ", itemInfos[0].from);
+                        console.log("to: ", itemInfos[0].to);
+                        console.log("-----");
+                        // console.log("data: ", data);
+                        for (var i = 0; i < res.x.length; i++) {
+                            if (res.x[i].length != 0) {
+                                itemInfos[i].from = itemInfos[i].to;
+                            }
+                        }
+
+                        Plotly.extendTraces(myDiv, res, updateTracert);
+                    },
+                    error: function (error) {
+                        console.log('Error:', error);
+                    }
+                });
+            }, 5000);
+        }
+
+        function extendTraces() {
+             Plotly.extendTraces(myDiv, res, updateTracert);
+        }
+
+        $yAxisPosition = parseInt($('tspan').attr('y'),10) + 50;
+        /*if ({{$graphtype}} != 2) {
+            document.getElementsByClassName('legend')[0].setAttribute("transform", "translate(50," + ($yAxisPosition)  +")");
+        }*/
 
         function generatePDF() {
             $("#savePdf").hide();
@@ -122,115 +181,6 @@
                 }, 0);
             });
 	    }
-
-
     </script>
-{{--
-    <script>
-    var threshold1 = 12;
-    var threshold2 = 16;
-    var offset = 0.75;
-
-    var trace1 = {
-    x: [1, 2, 3, 4],
-    y: [10, 15, 13, 17],
-    type: 'scatter'
-    };
-
-    var trace2 = {
-    x: [Math.min.apply(Math, trace1.x) + offset,
-        Math.max.apply(Math, trace1.x) - offset],
-    y: [threshold1 - offset, threshold2 - offset],
-    mode: 'text',
-    text: ['lower threshold', 'upper threshold'],
-    showlegend: true
-    }
-
-    var layout = {
-    xaxis: {
-        title: "x-axis",
-        tickangle: 45,
-        rangemode: 'nonnegative',
-        autorange: true,
-        exponentformat: "none"
-    },
-    yaxis: {
-        title: "Time",
-        tickangle: 45,
-        rangemode: 'nonnegative',
-        range: [0, 20],
-        autorange: false
-    },
-    shapes: [{
-        type: 'line',
-        xref: 'paper',
-        x0: 0,
-        y0: threshold1,
-        x1: 1,
-        y1: threshold1,
-        line: {
-        color: 'rgb(255, 0, 0)',
-        width: 2,
-        dash: 'dot'
-        },
-    }, {
-        type: 'line',
-        xref: 'paper',
-        x0: 0,
-        y0: threshold2,
-        x1: 1,
-        y1: threshold2,
-        line: {
-        color: 'rgb(0, 255, 0)',
-        width: 2,
-        dash: 'dot'
-        },
-    }]
-    };
-
-    var myDiv = document.getElementById('plotid')
-    //Plotly.newPlot(myDiv, [trace1, trace2], layout);
-    Plotly.newPlot(myDiv, [trace1], layout);
-
-    </script> --}}
-
-{{-- $(document).ready(function() {
-    setTimeout(function() {
-        location.reload();
-    }, 30000);
-}); --}}
-
-
-    {{--
-    <script>
-        var d3 = Plotly.d3;
-        var img_jpg= d3.select('#jpg-export');
-
-        // Ploting the Graph
-
-        var trace={x:[3,9,8,10,4,6,5],y:[5,7,6,7,8,9,8],type:"scatter"};
-        var trace1={x:[3,4,1,6,8,9,5],y:[4,2,5,2,1,7,3],type:"scatter"};
-        var data = [trace,trace1];
-        var layout = {title : "Simple Javascript Graph"};
-        Plotly.plot(
-        'plotid',
-        data,
-        layout)
-
-        // static image in jpg format
-
-        .then(
-            function(gd)
-            {
-            Plotly.toImage(gd,{height:300,width:300})
-                .then(
-                    function(url)
-                {
-                    img_jpg.attr("src", url);
-                    return Plotly.toImage(gd,{format:'jpeg',height:400,width:400});
-                }
-                )
-            });
-    </script> --}}
-</div>
+    </div>
 @endsection

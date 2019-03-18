@@ -20,6 +20,12 @@ function getSelectorOption($options)
             $selector->push(createSelectorOption('year', 'todate', 1, 'YTD'));
         } elseif ($value == "1y") {
             $selector->push(createSelectorOption('year', 'backward', 1, '1y'));
+        } else if ($value == "1d") {
+            $selector->push(createSelectorOption('day', 'backward', 1, '1d'));
+        } else if ($value == "1h") {
+            $selector->push(createSelectorOption('hour', 'backward', 1, '1h'));
+        } else if ($value == "1min") {
+            $selector->push(createSelectorOption('minute', 'backward', 1, '1min'));
         }
     }
     $selector->push(['step' => 'all']);
@@ -36,11 +42,18 @@ function createSelectorOption($step, $stepMode, $count, $lable)
     ]);
 }
 
-function createDataLine($x_data, $y_data, $mode, $name = null, $connectgaps = true, $size = null, $color = null, $dash = "solid", $fill = "none", $fillcolor = null, $stackgroup = null, $groupnorm = null)
+function getNewDataLine($xData, $yData) {
+    return collect([
+        "x" => $xData,
+        "y" => $yData,
+    ]);
+}
+
+function createDataLine($xData, $yData, $mode, $name = null, $connectgaps = true, $size = null, $color = null, $dash = "solid", $fill = "none", $fillcolor = null, $stackgroup = null, $groupnorm = null)
 {
     return collect([
-        "x" => $x_data,
-        "y" => $y_data,
+        "x" => $xData,
+        "y" => $yData,
         "mode" => $mode,
         "name" => $name,
         "fill" => $fill,
@@ -96,13 +109,13 @@ function createLayoutTitle($title = null)
     ]);
 }
 
-function createDataPie($value, $lable, $textinfo)
+function createDataPie($value, $lable, $textinfo = "none")
 {
     return collect([
         "values" => $value,
         "labels" => $lable,
         "type" => 'pie',
-        "hoverinfo" => "label+percent",
+        "hoverinfo" => "label",
         "textinfo" => $textinfo
     ]);
 }
@@ -223,7 +236,7 @@ function createLineShape($color, $width, $type){
 }
 
 
-function getDataAndLayoutFromGraph($graphid, $databaseConnection)
+function getDataAndLayoutFromGraph($graphid, $databaseConnection, $from = 0, $to = 2147483647)
 {
     $GRAPH = new Graph;
     $GRAPH->setConnection($databaseConnection);
@@ -234,6 +247,7 @@ function getDataAndLayoutFromGraph($graphid, $databaseConnection)
     $layout = collect();
     $shapes = collect();
     //set orientation of legend
+    $table = "history";
 
     if ($graphid != 0) {
         $graph = $GRAPH->find($graphid);
@@ -245,8 +259,8 @@ function getDataAndLayoutFromGraph($graphid, $databaseConnection)
 
         if ($graph->graphtype == GRAPH_TYPE_NORMAL) {
             //onlye show trigger in line graph
-
-            $items->each(function ($item) use ($data, $ITEM, $databaseConnection) {
+            // for ($i = 0; $i < $items->count(); i++)
+            foreach ($items as $item) {
                 //get data
                 $fill = "none";
                 $color = $item->pivot->color;
@@ -290,18 +304,18 @@ function getDataAndLayoutFromGraph($graphid, $databaseConnection)
                         break;
                 }
 
-                $clockValue = getClockAndValueNumericData($item->itemid, $item->value_type, $databaseConnection);
+                $clockValue = getClockAndValueNumericData($item->itemid, $item->value_type, $databaseConnection, $table, $from, $to);
                 //get delay time to handle gaps data
-                $delayTime = $ITEM->convertToTimestamp($item->delay);
+                $delayTime = convertToTimestamp($item->delay);
                 //add null to gaps data
                 smoothClockData($clockValue, $delayTime);
 
                 $data->push(createDataLine($clockValue[0], $clockValue[1], "lines", $item->name, false,  $size, $color, $dash, $fill, $fillcolor));
-            });
+            }
             //Draw line graph
 
             $rangeslider = collect();
-            $rangeselector = collect(['buttons' => getSelectorOption(['1m', '3m', '6m', 'ytd', '1y'])]);
+            $rangeselector = collect(['buttons' => getSelectorOption(['1min', '1h', '1d', '1m', '3m', '6m', 'ytd', '1y'])]);
             $layout = createLayoutLine(
                 createXAxisLayoutLine('date', null, true, $rangeselector, null),
                 createYAxisLayoutLine(null, null,  $items[0]->units, true),
@@ -311,7 +325,7 @@ function getDataAndLayoutFromGraph($graphid, $databaseConnection)
 
         } elseif ($graph->graphtype == GRAPH_TYPE_STACKED) {
             //Draw stacked (area chart)
-            $items->each(function ($item) use ($data, $ITEM, $databaseConnection) {
+            foreach ($items as $item) {
                 //get data
                 $fill = null;
                 $color = $item->pivot->color;
@@ -321,16 +335,16 @@ function getDataAndLayoutFromGraph($graphid, $databaseConnection)
 
                 $clockValue = getClockAndValueNumericData($item->itemid, $item->value_type, $databaseConnection, 'trends');
                 //get delay time to handle gaps data
-                $delayTime = $ITEM->convertToTimestamp($item->delay);
+                $delayTime = convertToTimestamp($item->delay);
                 //add null to gaps data
                 smoothClockData($clockValue, $delayTime, false);
                 //create data stacked
                 $data->push(createDataLine($clockValue[0], $clockValue[1], null, $item->name, false,  null, $color, null, $fill, $fillcolor,"one", "percent"));
                 // $data->push(createDataStacked($clockValue[0], $clockValue[1], $item->name, "one", "percent", $fillcolor));
-            });
+            }
             //Draw line graph
             $rangeslider = collect();
-            $rangeselector = collect(['buttons' => getSelectorOption(['1m', '3m', '6m', 'ytd', '1y'])]);
+            $rangeselector = collect(['buttons' => getSelectorOption(['1min', '1h', '1d', '1m', '3m', '6m', 'ytd', '1y'])]);
             $layout = createLayoutLine(
                 createXAxisLayoutLine('date', null, true, $rangeselector, null),
                 createYAxisLayoutLine(null, null, null, true),
@@ -346,7 +360,8 @@ function getDataAndLayoutFromGraph($graphid, $databaseConnection)
             $label = collect();
             $units = collect();
             $sum = 0;
-            $items->each(function ($item) use ($value, $label, $databaseConnection, $units, &$sum) {
+            foreach ($items as $item) {
+            // $items->each(function ($item) use ($value, $label, $databaseConnection, $units, &$sum) {
                 $clockValue = getClockAndValueNumericData($item->itemid, $item->value_type, $databaseConnection);
                 if ($item->pivot->type == 2) {
                     $value->prepend($clockValue[1]->avg());
@@ -359,7 +374,8 @@ function getDataAndLayoutFromGraph($graphid, $databaseConnection)
                     $units->push($item->units);
                 }
                 //get delay time to handle gaps data
-            });
+            // });
+            }
 
             $label->transform(function($item, $key) use ($sum, $value, $units) {
                 $proc = ($sum == 0) ? 0 : ($value[$key] * 100) / $sum;
@@ -375,7 +391,7 @@ function getDataAndLayoutFromGraph($graphid, $databaseConnection)
 
             $value[0] -= $value->slice(1)->sum();
 
-            $data->push(createDataPie($value, $label, 'label'));
+            $data->push(createDataPie($value, $label));
 
             $layout = createLayoutTitle($graph->name);
 
@@ -411,15 +427,15 @@ function setOrientedLegend($showlegend, $oriented, $x, $y) {
 }
 
 // max clock 2147483647 03:14:07 UTC on 19 January 2038 like Y2K
-function getClockAndValueNumericData($itemid, $data_type, $databaseConnection = 'zabbix', $table = 'history', $min_clock = 0, $max_clock = 2147483647)
+function getClockAndValueNumericData($itemid, $data_type, $databaseConnection = 'zabbix', $table = 'history', $from = 0, $to = 2147483647)
 {
     // $table = 'history';
     if ($data_type == ITEM_VALUE_TYPE_UNSIGNED) {
         $table .= '_uint';
     }
 
-    $tableData = DB::connection($databaseConnection)->table($table)->where('itemid', $itemid)->where('clock', ">=", $min_clock)
-        ->where('clock', "<", $max_clock)->orderBy('clock')->get();
+    $tableData = DB::connection($databaseConnection)->table($table)->where('itemid', $itemid)->where('clock', ">", $from)
+        ->where('clock', "<", $to)->orderBy('clock')->get();
     $xData = collect();
     $yData = collect();
     if (starts_with($table, 'history')) {
@@ -753,4 +769,118 @@ function zbx_empty($value) {
 	}
 
 	return false;
+}
+
+function getDataFromGraphId($graphid, $databaseConnection)
+{
+    $GRAPH = new Graph;
+    $GRAPH->setConnection($databaseConnection);
+    $ITEM = new Item;
+    $ITEM->setConnection($databaseConnection);
+
+    $data = collect();
+    $layout = collect();
+
+    if ($graphid != 0) {
+        $graph = $GRAPH->find($graphid);
+        $items = $GRAPH->find($graphid)->items->sortBy('pivot_sortorder');
+
+        if ($graph->graphtype == GRAPH_TYPE_NORMAL) {
+            //onlye show trigger in line graph
+
+            $items->each(function ($item) use ($data, $ITEM, $databaseConnection) {
+                //get data
+                $clockValue = getClockAndValueNumericData($item->itemid, $item->value_type, $databaseConnection);
+                //get delay time to handle gaps data
+                $delayTime = convertToTimestamp($item->delay);
+                //add null to gaps data
+                smoothClockData($clockValue, $delayTime);
+
+                $data->push(getNewDataLine($clockValue[0], $clockValue[1]));
+            });
+
+            //Draw line graph
+        } elseif ($graph->graphtype == GRAPH_TYPE_STACKED) {
+            //Draw stacked (area chart)
+            $items->each(function ($item) use ($data, $ITEM, $databaseConnection) {
+
+                $clockValue = getClockAndValueNumericData($item->itemid, $item->value_type, $databaseConnection, 'trends');
+                //get delay time to handle gaps data
+                $delayTime = convertToTimestamp($item->delay);
+                //add null to gaps data
+                smoothClockData($clockValue, $delayTime, false);
+                //create data stacked
+                $data->push(getNewDataLine($clockValue[0], $clockValue[1]));
+                // $data->push(createDataStacked($clockValue[0], $clockValue[1], $item->name, "one", "percent", $fillcolor));
+            });
+
+        } elseif ($graph->graphtype == GRAPH_TYPE_PIE) {
+            //Draw pie graph
+            //Get total of pie
+            $value = collect();
+            $label = collect();
+            $units = collect();
+            $sum = 0;
+            $items->each(function ($item) use ($value, $label, $databaseConnection, $units, &$sum) {
+                $clockValue = getClockAndValueNumericData($item->itemid, $item->value_type, $databaseConnection);
+                if ($item->pivot->type == 2) {
+                    $value->prepend($clockValue[1]->avg());
+                    $label->prepend($item->name);
+                    $units->prepend($item->units);
+                    $sum = $clockValue[1]->avg();
+                } else {
+                    $value->push($clockValue[1]->avg());
+                    $label->push($item->name);
+                    $units->push($item->units);
+                }
+                //get delay time to handle gaps data
+            });
+
+            $label->transform(function($item, $key) use ($sum, $value, $units) {
+                $proc = ($sum == 0) ? 0 : ($value[$key] * 100) / $sum;
+                $strValue = sprintf(': %s ('.(round($proc) != round($proc, 2) ? '%0.2f' : '%0.0f').'%%)',
+					convert_units([
+						'value' => $value[$key],
+						'units' => $units[$key]
+					]),
+					$proc
+                );
+                return $item . ' ' . $strValue;;
+            });
+
+            $value[0] -= $value->slice(1)->sum();
+
+            $data->push(createDataPie($value, $label));
+
+
+        } elseif ($graph->graphtype == GRAPH_TYPE_EXPLODED) {
+            //Draw exploded graph
+        }
+    }
+
+    return array($data, $layout);
+}
+
+//convert delay time to unix time gaps, interval time to get data
+function convertToTimestamp($time){
+    if(strpos($time,'s')){
+        $time=str_replace("s","",$time);
+    }elseif (strpos($time,'m')){
+        $time=str_replace("m","",$time)*60;
+    }elseif (strpos($time,'h')){
+        $time=str_replace("h","",$time)*3600;
+    }elseif (strpos($time,'d')){
+        $time=str_replace("d","",$time)*86400;
+    }elseif (strpos($time,'w')){
+        $time=str_replace("w","",$time)*604800;
+    }
+    return $time*1000;
+}
+
+function getListItemIdByGraphId($graphid, $databaseConnection) {
+    $itemids = collect();
+    if ($graphid > 0) {
+        $itemids = Graph::on($databaseConnection)->find($graphid)->items->sortBy('pivot_sortorder')->pluck('itemid');
+    }
+    return $itemids;
 }

@@ -87,3 +87,10 @@ define('ITEM_CONVERT_WITH_UNITS',	0); // - do not convert empty units
 define('ITEM_CONVERT_NO_UNITS',		1); // - no units
 
 define('ZBX_PRECISION_10',	10);
+
+define('DATE_TIME_FORMAT_SECONDS', _('Y-m-d H:i:s'));
+define('DATE_TIME_FORMAT', _('Y-m-d H:i'));
+define('DATE_TIME_FORMAT_SHORT', _('m-d H:i'));
+define('DATE_FORMAT', _('Y-m-d'));
+define('TIME_FORMAT_SECONDS', _('H:i:s'));
+define('TIME_FORMAT', _('H:i'));

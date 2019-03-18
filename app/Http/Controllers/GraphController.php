@@ -38,6 +38,7 @@ class GraphController extends Controller
             createDatabaseConnectionByDatabaseName($databaseConnection, $databaseConnection);
         }
         $config = getDatabaseConnection($databaseConnection);
+        setGlobalDatabaseConnection($databaseConnection);
 
         $GROUP = new Group;
         $HOST = new Host;
@@ -91,7 +92,11 @@ class GraphController extends Controller
 
         $data = collect();
         $layout = collect();
-        list($data, $layout) = getDataAndLayoutFromGraph($rq_graphid, $databaseConnection);
+        $to = time();
+        $from = $to - 86400;
+        // return $maxClock;
+        list($data, $layout) = getDataAndLayoutFromGraph($rq_graphid, $databaseConnection, $from, $to);
+        // list($data, $layout) = getDataAndLayoutFromGraph($rq_graphid, $databaseConnection);
 
         $graphtype = 0;
         if ($rq_graphid != 0) {
@@ -101,7 +106,8 @@ class GraphController extends Controller
         // dd($graphtype);
         // return $layout;
         // return $data;
-        return view('graphs.view', compact('groups', 'hosts', 'rq_groupid', 'graphs', 'rq_hostid', 'data', 'layout', 'rq_graphid', 'localServers', 'requestLocalId', 'graphtype'));
+        return view('graphs.view', compact('groups', 'hosts', 'rq_groupid', 'graphs', 'rq_hostid', 'data', 'layout', 'rq_graphid',
+                        'localServers', 'requestLocalId', 'graphtype', 'from', 'to'));
     }
 
     public function create()

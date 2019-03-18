@@ -49,6 +49,8 @@ Route::resource('report', 'ReportController');
 Route::get('/ajax/group', 'AjaxController@ajaxGetGroup');
 Route::get('/ajax/host', 'AjaxController@ajaxGetHostByGroupId');
 Route::get('/ajax/graph', 'AjaxController@ajaxGetGraphByGroupAndHost');
+Route::get('/ajax/chart/graph', 'AjaxController@ajaxGetChartValueByGraphId');
+Route::get('/ajax/chart/item', 'AjaxController@ajaxGetChartValueByItem');
 
 // Route::get('/report/create', 'ReportController@create');
 
