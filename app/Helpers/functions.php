@@ -135,6 +135,7 @@ function createDataStacked($x_data, $y_data, $name, $stackgroup, $groupnorm, $fi
 
 function smoothClockData($clockValue, $delayTime, $smooth = true)
 {
+    // return;
     //add null to missing data
     $timestamp = 0;
     foreach ($clockValue[0] as $key => $clock) {
@@ -434,7 +435,7 @@ function getClockAndValueNumericData($itemid, $data_type, $databaseConnection = 
         $table .= '_uint';
     }
 
-    $tableData = DB::connection($databaseConnection)->table($table)->where('itemid', $itemid)->where('clock', ">", $from)
+    $tableData = DB::connection($databaseConnection)->table($table)->where('itemid', $itemid)->where('clock', ">=", $from)
         ->where('clock', "<", $to)->orderBy('clock')->get();
     $xData = collect();
     $yData = collect();

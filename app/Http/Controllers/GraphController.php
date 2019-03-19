@@ -94,6 +94,7 @@ class GraphController extends Controller
         $layout = collect();
         $to = time();
         $from = $to - 86400;
+        // dd($from);
         // return $maxClock;
         list($data, $layout) = getDataAndLayoutFromGraph($rq_graphid, $databaseConnection, $from, $to);
         // list($data, $layout) = getDataAndLayoutFromGraph($rq_graphid, $databaseConnection);

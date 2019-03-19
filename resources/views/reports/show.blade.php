@@ -122,8 +122,8 @@
         @for ($i = 0; $i < $reportData->count(); $i++)
             var data = {!!$reportData[$i]['data']!!};
             var layout = {!!$reportData[$i]['layout']!!};
-            var myDiv = document.getElementById('plotid{{$i}}');
-            Plotly.newPlot(myDiv, data, layout);
+            var myPlot = document.getElementById('plotid{{$i}}');
+            Plotly.newPlot(myPlot, data, layout);
         @endfor
 
     </script>

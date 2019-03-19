@@ -91,8 +91,8 @@
         console.log("data old: ", data);
         // layout.width = 1000;
         // layout.height = 800;
-        var myDiv = document.getElementById('plotid');
-        Plotly.plot(myDiv, data, layout).then(gd => {
+        var myPlot = document.getElementById('plotid');
+        Plotly.plot(myPlot, data, layout).then(gd => {
             gd.on('plotly_legendclick', () => false)
         });
 
@@ -112,36 +112,30 @@
             for (var i = 0; i < lengthItemIds; i++) {
                 var itemInfo = {};
                 itemInfo.itemId = itemIds[i];
-                itemInfo.from = {{$to}};
-                itemInfo.to = Math.floor(Date.now() / 1000)
+                itemInfo.from = {{$from}};
+                itemInfo.to = {{$to}};
                 itemInfos.push(itemInfo);
             }
 
             var interval = setInterval(function() {
-                for (var i = 0; i < itemInfos.length; i++) {
-                    itemInfos[i].to = Math.floor(Date.now() / 1000)
-                }
+                var to = getUnixTime(Date.now());
+                var itemInfoGetData = getDataExtend(to);
+
                 $.ajax({
                     type: 'GET',
                     url: '/ajax/chart/item',
                     data: {
                         "databaseConnection": "{{getGlobalDatabaseConnection()}}",
-                        "itemInfos": JSON.stringify(itemInfos),
+                        "itemInfos": JSON.stringify(itemInfoGetData),
                     },
                     dataType: 'json',
                     success: function (res) {
-                        console.log("res: ", res);
-                        console.log("from: ", itemInfos[0].from);
-                        console.log("to: ", itemInfos[0].to);
-                        console.log("-----");
-                        // console.log("data: ", data);
-                        for (var i = 0; i < res.x.length; i++) {
-                            if (res.x[i].length != 0) {
-                                itemInfos[i].from = itemInfos[i].to;
-                            }
-                        }
-
-                        Plotly.extendTraces(myDiv, res, updateTracert);
+                        console.log('Susccess extend traces: ', res);
+                        console.log('Infos: ', itemInfos);
+                        // for (var i = 0; i < itemInfos.length; i++) {
+                        //     itemInfos[i].to = to;
+                        // }
+                        Plotly.extendTraces(myPlot, res, updateTracert);
                     },
                     error: function (error) {
                         console.log('Error:', error);
@@ -150,14 +144,81 @@
             }, 5000);
         }
 
-        function extendTraces() {
-             Plotly.extendTraces(myDiv, res, updateTracert);
+        myPlot.on('plotly_relayout', function(data){
+            if (data["xaxis.range[0]"] != undefined) {
+                var from = getUnixTime(new Date(data["xaxis.range[0]"]).getTime());
+                var itemInfoGetData = getDataPrepend(from);
+
+                $.ajax({
+                    type: 'GET',
+                    url: '/ajax/chart/item',
+                    data: {
+                        "databaseConnection": "{{getGlobalDatabaseConnection()}}",
+                        "itemInfos": JSON.stringify(itemInfoGetData),
+                    },
+                    dataType: 'json',
+                    success: function (res) {
+                        console.log('Susccess prepend traces:', res);
+                        // for (var i = 0; i < itemInfos.length; i++) {
+                        //     itemInfos[i].from = from;
+                        // }
+                        // for (var i = 0; i < res.x.length; i++) {
+                        //     if (res.x[i].length != 0) {
+                        //         itemInfos[i].from = from;;
+                        //     }
+                        // }
+                        Plotly.prependTraces(myPlot, res, updateTracert);
+                    },
+                    error: function (error) {
+                        console.log('Error:', error);
+                    }
+                });
+            }
+        });
+
+        function getDataPrepend(from) {
+            var itemInfoGetData = [];
+            for (var i = 0; i < itemInfos.length; i++) {
+                var item = {};
+                item.itemId = itemInfos[i].itemId;
+                item.from = 0;
+                item.to = 0;
+                if (itemInfos[i].from > from) {
+                    item.from = from;
+                    item.to = itemInfos[i].from;
+                    itemInfos[i].from = from;
+                }
+                itemInfoGetData.push(item);
+            }
+
+            return itemInfoGetData;
+        }
+
+        function getDataExtend(to) {
+            var itemInfoGetData = [];
+            for (var i = 0; i < itemInfos.length; i++) {
+                var item = {};
+                item.itemId = itemInfos[i].itemId;
+                item.from = 0;
+                item.to = 0;
+                if (itemInfos[i].to < to) {
+                    item.from = itemInfos[i].to;
+                    item.to = to;
+                    itemInfos[i].to = to;
+                }
+                itemInfoGetData.push(item);
+            }
+            return itemInfoGetData;
         }
 
         $yAxisPosition = parseInt($('tspan').attr('y'),10) + 50;
         /*if ({{$graphtype}} != 2) {
             document.getElementsByClassName('legend')[0].setAttribute("transform", "translate(50," + ($yAxisPosition)  +")");
         }*/
+
+        function getUnixTime(timeDate) {
+            return Math.floor(timeDate / 1000);
+        }
 
         function generatePDF() {
             $("#savePdf").hide();
