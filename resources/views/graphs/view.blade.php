@@ -87,7 +87,9 @@
 
     <script>
         var data = {!!$data!!};
+        var dataLength = {{count($data)}};
         var layout = {!!$layout!!}
+
         console.log("data old: ", data);
         // layout.width = 1000;
         // layout.height = 800;
@@ -102,14 +104,16 @@
         }
 
         var requestId = {{$rq_graphid}};
+        var itemIdsLength = 0;
 
         if (requestId > 0) {
             var itemIds = {{getListItemIdByGraphId($rq_graphid, getGlobalDatabaseConnection())}};
-            var lengthItemIds = itemIds.length;
+            var itemIdsLength = itemIds.length;
+
             var from = [];
             var to = [];
             var itemInfos = [];
-            for (var i = 0; i < lengthItemIds; i++) {
+            for (var i = 0; i < itemIdsLength; i++) {
                 var itemInfo = {};
                 itemInfo.itemId = itemIds[i];
                 itemInfo.from = {{$from}};
@@ -132,9 +136,11 @@
                     success: function (res) {
                         console.log('Susccess extend traces: ', res);
                         console.log('Infos: ', itemInfos);
-                        // for (var i = 0; i < itemInfos.length; i++) {
-                        //     itemInfos[i].to = to;
-                        // }
+                        for (var i = 0; i < (dataLength - itemIdsLength); i++) {
+                            res.x.push([]);
+                            res.y.push([]);
+                        }
+                        console.log('Add null value for extend: ', res);
                         Plotly.extendTraces(myPlot, res, updateTracert);
                     },
                     error: function (error) {
@@ -158,15 +164,13 @@
                     },
                     dataType: 'json',
                     success: function (res) {
-                        console.log('Susccess prepend traces:', res);
-                        // for (var i = 0; i < itemInfos.length; i++) {
-                        //     itemInfos[i].from = from;
-                        // }
-                        // for (var i = 0; i < res.x.length; i++) {
-                        //     if (res.x[i].length != 0) {
-                        //         itemInfos[i].from = from;;
-                        //     }
-                        // }
+                        console.log('Susccess prepend traces: ', res);
+                        console.log('Infos: ', itemInfos);
+                        for (var i = 0; i < (dataLength - itemIdsLength); i++) {
+                            res.x.push([]);
+                            res.y.push([]);
+                        }
+                        console.log('Add null value for prepend: ', res);
                         Plotly.prependTraces(myPlot, res, updateTracert);
                     },
                     error: function (error) {
