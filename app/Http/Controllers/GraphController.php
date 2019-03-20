@@ -86,23 +86,21 @@ class GraphController extends Controller
 
         //get items based on selected graph
 
-        // $items = Item::whereHas('graphs', function ($query) use ($rq_graphid) {
-        //     $query->where('graphs.graphid', $rq_graphid);
-        // })->get();
-
         $data = collect();
         $layout = collect();
-        $to = time();
-        $from = $to - 86400;
-        // dd($from);
+
         // return $maxClock;
-        list($data, $layout) = getDataAndLayoutFromGraph($rq_graphid, $databaseConnection, $from, $to);
+        // list($data, $layout) = getDataAndLayoutFromGraph($rq_graphid, $databaseConnection, $from, $to);
         // list($data, $layout) = getDataAndLayoutFromGraph($rq_graphid, $databaseConnection);
 
         $graphtype = 0;
         if ($rq_graphid != 0) {
+            $to = getLastDataTickerTimeFromGraph($rq_graphid, $databaseConnection);
+            $from = $to - 86400;
             $graph = Graph::on(getGlobalDatabaseConnection())->find($rq_graphid);
             $graphtype = $graph->graphtype;
+            list($data, $layout) = getDataAndLayoutFromGraph($rq_graphid, $databaseConnection, $from, $to);
+            // list($data, $layout) = getDataAndLayoutFromGraph($rq_graphid, $databaseConnection);
         }
         // dd($graphtype);
         // return $layout;

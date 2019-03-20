@@ -885,3 +885,28 @@ function getListItemIdByGraphId($graphid, $databaseConnection) {
     }
     return $itemids;
 }
+
+function getLastDataTickerTimeFromGraph($graphid, $databaseConnection){
+    $GRAPH = new Graph;
+    $GRAPH->setConnection($databaseConnection);
+    $lastValue = 0;
+
+    if ($graphid != 0) {
+        $item = $GRAPH->find($graphid)->items->first();
+        $lastValue = getLastDataTickerTime($item->itemid, $item->value_type, $databaseConnection);
+    } else {
+        $lastValue = time();
+    }
+    return $lastValue;
+}
+
+function getLastDataTickerTime($itemid, $data_type, $databaseConnection = 'zabbix', $table = 'history')
+{
+    // $table = 'history';
+    if ($data_type == ITEM_VALUE_TYPE_UNSIGNED) {
+        $table .= '_uint';
+    }
+
+    $tableData = DB::connection($databaseConnection)->table($table)->where('itemid', $itemid)->orderBy('clock','desc')->take(1)->first();
+    return $tableData->clock;
+}
