@@ -90,7 +90,6 @@
         var dataLength = {{count($data)}};
         var layout = {!!$layout!!}
 
-        console.log("data old: ", data);
         // layout.width = 1000;
         // layout.height = 800;
         var myPlot = document.getElementById('plotid');
@@ -123,10 +122,10 @@
 
             var interval = setInterval(function() {
                 var to = getUnixTime(Date.now());
-                console.log("to: ", to);
-                console.log('itemInfos:: ', itemInfos);
+                // console.log("to: ", to);
+                // console.log('itemInfos:: ', itemInfos);
                 var itemInfoGetData = getDataExtend(to);
-                console.log('itemInfoGetData: ', itemInfoGetData);
+                // console.log('itemInfoGetData: ', itemInfoGetData);
 
                 $.ajax({
                     type: 'GET',
@@ -150,9 +149,9 @@
             if (data["xaxis.range[0]"] != undefined) {
                 var from = getUnixTime(new Date(data["xaxis.range[0]"]).getTime());
                 var itemInfoGetData = getDataPrepend(from);
-                console.log("from: ", from);
-                console.log('itemInfoGetData: ', itemInfoGetData);
-                console.log('itemInfos: ', itemInfos);
+                // console.log("from: ", from);
+                // console.log('itemInfoGetData: ', itemInfoGetData);
+                // console.log('itemInfos: ', itemInfos);
 
                 $.ajax({
                     type: 'GET',
@@ -205,11 +204,10 @@
         }
 
         function updateAfterPrependData(res) {
-            console.log('Susccess prepend traces: ', res);
             var updateData = res.data;
-            console.log('Infos: ', itemInfos);
-            console.log('Item get: ', res.itemInfo);
-            console.log('Susccess prepend traces: ', updateData);
+            // console.log('Infos: ', itemInfos);
+            // console.log('Item get: ', res.itemInfo);
+            // console.log('Susccess prepend traces: ', updateData);
             for (var i = 0; i < (dataLength - itemIdsLength); i++) {
                 updateData.x.push([]);
                 updateData.y.push([]);
@@ -219,15 +217,14 @@
                     itemInfos[i].from = res.itemInfo[i].from;
                 }
             }
-            console.log('Add null value for prepend: ', updateData);
+            // console.log('Add null value for prepend: ', updateData);
             Plotly.prependTraces(myPlot, updateData, updateTracert);
         }
 
         function updateAfterExtendData(res, to) {
-            console.log('Susccess extend traces: ', res);
             var updateData = res.data;
-            console.log('Item get: ', res.itemInfo);
-            console.log('Susccess: ', updateData);
+            // console.log('Item get: ', res.itemInfo);
+            // console.log('Susccess: ', updateData);
             for (var i = 0; i < (dataLength - itemIdsLength); i++) {
                 updateData.x.push([]);
                 updateData.y.push([]);
@@ -238,8 +235,8 @@
                     itemInfos[i].to = res.itemInfo[i].to;
                 }
             }
-            console.log('Infos after change: ', itemInfos);
-            console.log('Add null value for extend: ', updateData);
+            // console.log('Infos after change: ', itemInfos);
+            // console.log('Add null value for extend: ', updateData);
             Plotly.extendTraces(myPlot, updateData, updateTracert);
         }
 
