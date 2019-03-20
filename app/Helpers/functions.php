@@ -133,13 +133,16 @@ function createDataStacked($x_data, $y_data, $name, $stackgroup, $groupnorm, $fi
     ]);
 }
 
-function smoothClockData($clockValue, $delayTime, $smooth = true)
+function smoothClockData($clockValue, $delayTime, $smooth = true, $from = 0, $to = 0)
 {
     // return;
     //add null to missing data
+    if (count($clockValue[0])  == 0) {
+        return;
+    }
     $timestamp = 0;
     foreach ($clockValue[0] as $key => $clock) {
-        if ($key != 0) {
+        if ($key > 0) {
             if ($clockValue[0][$key] - $timestamp > (2 * $delayTime)) {
                 $clockValue[0]->splice($key, 0, $timestamp + $delayTime);
                 $clockValue[1]->splice($key, 0, "null");
@@ -150,6 +153,17 @@ function smoothClockData($clockValue, $delayTime, $smooth = true)
         }
         $timestamp = $clockValue[0][$key];
     }
+
+    //get length of clock value
+    // $clockValueLength = count($clockValue[0]);
+    // if (count($clockValue[0]) > 0 && $to > 0) {
+    //     // dd($to);
+    //     // $a = $to - $clockValue[0][$clockValueLength-1] > (2 * $delayTime);
+    //     if ($to*1000 - $clockValue[0][$clockValueLength-1] > (2 * $delayTime)) {
+    //         $clockValue[0]->splice($clockValueLength, 0, $clockValue[0][$clockValueLength-1] + $delayTime);
+    //         $clockValue[1]->splice($clockValueLength, 0, "null");
+    //     }
+    // }
 }
 
 function createTriggerShape($items, $databaseConnection) {
@@ -249,6 +263,9 @@ function getDataAndLayoutFromGraph($graphid, $databaseConnection, $from = 0, $to
     $shapes = collect();
     //set orientation of legend
     $table = "history";
+    $clockValue = collect();
+    $firstTick = 0;
+    $lastTick = 0;
 
     if ($graphid != 0) {
         $graph = $GRAPH->find($graphid);
@@ -305,7 +322,7 @@ function getDataAndLayoutFromGraph($graphid, $databaseConnection, $from = 0, $to
                         break;
                 }
 
-                $clockValue = getClockAndValueNumericData($item->itemid, $item->value_type, $databaseConnection, $table, $from, $to);
+                list($clockValue, $firstTick, $lastTick) = getClockAndValueNumericData($item->itemid, $item->value_type, $databaseConnection, $table, $from, $to);
                 //get delay time to handle gaps data
                 $delayTime = convertToTimestamp($item->delay);
                 //add null to gaps data
@@ -334,7 +351,7 @@ function getDataAndLayoutFromGraph($graphid, $databaseConnection, $from = 0, $to
                 $size = "1";
                 $fillcolor = $item->pivot->color;
 
-                $clockValue = getClockAndValueNumericData($item->itemid, $item->value_type, $databaseConnection, 'trends');
+                list($clockValue, $firstTick, $lastTick) = getClockAndValueNumericData($item->itemid, $item->value_type, $databaseConnection, 'trends');
                 //get delay time to handle gaps data
                 $delayTime = convertToTimestamp($item->delay);
                 //add null to gaps data
@@ -363,7 +380,7 @@ function getDataAndLayoutFromGraph($graphid, $databaseConnection, $from = 0, $to
             $sum = 0;
             foreach ($items as $item) {
             // $items->each(function ($item) use ($value, $label, $databaseConnection, $units, &$sum) {
-                $clockValue = getClockAndValueNumericData($item->itemid, $item->value_type, $databaseConnection);
+                list($clockValue, $firstTick, $lastTick) = getClockAndValueNumericData($item->itemid, $item->value_type, $databaseConnection);
                 if ($item->pivot->type == 2) {
                     $value->prepend($clockValue[1]->avg());
                     $label->prepend($item->name);
@@ -411,7 +428,7 @@ function getDataAndLayoutFromGraph($graphid, $databaseConnection, $from = 0, $to
         }
     }
 
-    return array($data, $layout);
+    return array($data, $layout, $firstTick, $lastTick);
 }
 
 function setOrientedLegend($showlegend, $oriented, $x, $y) {
@@ -435,10 +452,17 @@ function getClockAndValueNumericData($itemid, $data_type, $databaseConnection = 
         $table .= '_uint';
     }
 
-    $tableData = DB::connection($databaseConnection)->table($table)->where('itemid', $itemid)->where('clock', ">=", $from)
-        ->where('clock', "<", $to)->orderBy('clock')->get();
+    $tableData = DB::connection($databaseConnection)->table($table)->where('itemid', $itemid)->where('clock', ">", $from)
+        ->where('clock', "<=", $to)->orderBy('clock')->get();
     $xData = collect();
     $yData = collect();
+    $firstTick = 0;
+    $lastTick = 0;
+    if ($tableData->isNotEmpty()) {
+        $firstTick = $tableData->first()->clock;
+        $lastTick = $tableData->last()->clock;
+    }
+
     if (starts_with($table, 'history')) {
         $tableData->each(function ($history) use ($xData, $yData) {
             //multiple 1000,  miliseconds in JS
@@ -452,7 +476,7 @@ function getClockAndValueNumericData($itemid, $data_type, $databaseConnection = 
             $yData->push($history->value_avg);
         });
     }
-    return collect([$xData, $yData]);
+    return array(collect([$xData, $yData]), $firstTick, $lastTick);
 }
 
 function getLocalServerSchema() {
@@ -781,6 +805,9 @@ function getDataFromGraphId($graphid, $databaseConnection)
 
     $data = collect();
     $layout = collect();
+    $clockValue = collect();
+    $firstTick = 0;
+    $lastTick = 0;
 
     if ($graphid != 0) {
         $graph = $GRAPH->find($graphid);
@@ -791,7 +818,7 @@ function getDataFromGraphId($graphid, $databaseConnection)
 
             $items->each(function ($item) use ($data, $ITEM, $databaseConnection) {
                 //get data
-                $clockValue = getClockAndValueNumericData($item->itemid, $item->value_type, $databaseConnection);
+                list($clockValue, $firstTick, $lastTick) = getClockAndValueNumericData($item->itemid, $item->value_type, $databaseConnection);
                 //get delay time to handle gaps data
                 $delayTime = convertToTimestamp($item->delay);
                 //add null to gaps data
@@ -805,7 +832,7 @@ function getDataFromGraphId($graphid, $databaseConnection)
             //Draw stacked (area chart)
             $items->each(function ($item) use ($data, $ITEM, $databaseConnection) {
 
-                $clockValue = getClockAndValueNumericData($item->itemid, $item->value_type, $databaseConnection, 'trends');
+                list($clockValue, $firstTick, $lastTick) = getClockAndValueNumericData($item->itemid, $item->value_type, $databaseConnection, 'trends');
                 //get delay time to handle gaps data
                 $delayTime = convertToTimestamp($item->delay);
                 //add null to gaps data
@@ -823,7 +850,7 @@ function getDataFromGraphId($graphid, $databaseConnection)
             $units = collect();
             $sum = 0;
             $items->each(function ($item) use ($value, $label, $databaseConnection, $units, &$sum) {
-                $clockValue = getClockAndValueNumericData($item->itemid, $item->value_type, $databaseConnection);
+                list($clockValue, $firstTick, $lastTick) = getClockAndValueNumericData($item->itemid, $item->value_type, $databaseConnection);
                 if ($item->pivot->type == 2) {
                     $value->prepend($clockValue[1]->avg());
                     $label->prepend($item->name);

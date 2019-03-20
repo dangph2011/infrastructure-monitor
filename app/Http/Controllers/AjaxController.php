@@ -55,6 +55,9 @@ class AjaxController extends Controller
         $data = collect();
         $table = "history";
         //set orientation of legend
+        $clockValue = collect();
+        $firstTick = 0;
+        $lastTick = 0;
 
         if ($graphid != 0) {
             $graph = $GRAPH->find($graphid);
@@ -63,7 +66,7 @@ class AjaxController extends Controller
             if ($graph->graphtype == GRAPH_TYPE_NORMAL || $graph->graphtype == GRAPH_TYPE_STACKED) {
                 //onlye show trigger in line graph
                 foreach ($items as $item) {
-                    $clockValue = getClockAndValueNumericData($item->itemid, $item->value_type, $databaseConnection, $table, $from, $to);
+                    list($clockValue, $firstTick, $lastTick) = getClockAndValueNumericData($item->itemid, $item->value_type, $databaseConnection, $table, $from, $to);
                     //get delay time to handle gaps data
                     $delayTime = convertToTimestamp($item->delay);
                     //add null to gaps data
@@ -73,12 +76,17 @@ class AjaxController extends Controller
             }
         }
 
-        $result = null;
+        $value = null;
         for ($i = 0; $i < $data->count(); $i++) {
-            $result["x"][$i] = ($data[$i]["x"]);
-            $result["y"][$i] = ($data[$i]["y"]);
+            $value["x"][$i] = ($data[$i]["x"]);
+            $value["y"][$i] = ($data[$i]["y"]);
         }
 
+        $result = collect([
+            "data" => $value,
+            "firstTick" => $firstTick,
+            "lastTick" => $lastTick
+        ]);
 
         return $result;
     }
@@ -93,25 +101,36 @@ class AjaxController extends Controller
 
         $data = collect();
         $table = "history";
+        $clockValue = collect();
+        $firstTick = 0;
+        $lastTick = 0;
         //set orientation of legend
         for ($i = 0; $i < count($itemInfos); $i++) {
             $item = Item::on($databaseConnection)->find($itemInfos[$i]->itemId);
             $from = $itemInfos[$i]->from;
             $to = $itemInfos[$i]->to;
 
-            $clockValue = getClockAndValueNumericData($item->itemid, $item->value_type, $databaseConnection, $table, $from, $to);
+            list($clockValue, $firstTick, $lastTick) = getClockAndValueNumericData($item->itemid, $item->value_type, $databaseConnection, $table, $from, $to);
+            $itemInfos[$i]->from = $firstTick;
+            $itemInfos[$i]->to = $lastTick;
+
             //get delay time to handle gaps data
             $delayTime = convertToTimestamp($item->delay);
             //add null to gaps data
-            smoothClockData($clockValue, $delayTime,true);
+            smoothClockData($clockValue, $delayTime, true, $from, $to);
             $data->push(getNewDataLine($clockValue[0], $clockValue[1]));
         }
 
-        $result = null;
+        $value = null;
         for ($i = 0; $i < $data->count(); $i++) {
-            $result["x"][$i] = ($data[$i]["x"]);
-            $result["y"][$i] = ($data[$i]["y"]);
+            $value["x"][$i] = ($data[$i]["x"]);
+            $value["y"][$i] = ($data[$i]["y"]);
         }
+
+        $result = collect([
+            "data" => $value,
+            "itemInfo" => $itemInfos
+        ]);
 
         return $result;
     }

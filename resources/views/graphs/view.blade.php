@@ -116,14 +116,17 @@
             for (var i = 0; i < itemIdsLength; i++) {
                 var itemInfo = {};
                 itemInfo.itemId = itemIds[i];
-                itemInfo.from = {{$from}};
-                itemInfo.to = {{$to}};
+                itemInfo.from = {{$firstTick}};
+                itemInfo.to = {{$lastTick}};
                 itemInfos.push(itemInfo);
             }
 
             var interval = setInterval(function() {
                 var to = getUnixTime(Date.now());
+                console.log("to: ", to);
+                console.log('itemInfos:: ', itemInfos);
                 var itemInfoGetData = getDataExtend(to);
+                console.log('itemInfoGetData: ', itemInfoGetData);
 
                 $.ajax({
                     type: 'GET',
@@ -134,26 +137,22 @@
                     },
                     dataType: 'json',
                     success: function (res) {
-                        console.log('Susccess extend traces: ', res);
-                        console.log('Infos: ', itemInfos);
-                        for (var i = 0; i < (dataLength - itemIdsLength); i++) {
-                            res.x.push([]);
-                            res.y.push([]);
-                        }
-                        console.log('Add null value for extend: ', res);
-                        Plotly.extendTraces(myPlot, res, updateTracert);
+                        updateAfterExtendData(res);
                     },
                     error: function (error) {
                         console.log('Error:', error);
                     }
                 });
-            }, 5000);
+            }, 10000);
         }
 
         myPlot.on('plotly_relayout', function(data){
             if (data["xaxis.range[0]"] != undefined) {
                 var from = getUnixTime(new Date(data["xaxis.range[0]"]).getTime());
                 var itemInfoGetData = getDataPrepend(from);
+                console.log("from: ", from);
+                console.log('itemInfoGetData: ', itemInfoGetData);
+                console.log('itemInfos: ', itemInfos);
 
                 $.ajax({
                     type: 'GET',
@@ -164,14 +163,7 @@
                     },
                     dataType: 'json',
                     success: function (res) {
-                        console.log('Susccess prepend traces: ', res);
-                        console.log('Infos: ', itemInfos);
-                        for (var i = 0; i < (dataLength - itemIdsLength); i++) {
-                            res.x.push([]);
-                            res.y.push([]);
-                        }
-                        console.log('Add null value for prepend: ', res);
-                        Plotly.prependTraces(myPlot, res, updateTracert);
+                        updateAfterPrependData(res);
                     },
                     error: function (error) {
                         console.log('Error:', error);
@@ -185,12 +177,10 @@
             for (var i = 0; i < itemInfos.length; i++) {
                 var item = {};
                 item.itemId = itemInfos[i].itemId;
-                item.from = 0;
-                item.to = 0;
+                item.from = from;
+                item.to = from;
                 if (itemInfos[i].from > from) {
-                    item.from = from;
                     item.to = itemInfos[i].from;
-                    itemInfos[i].from = from;
                 }
                 itemInfoGetData.push(item);
             }
@@ -199,20 +189,58 @@
         }
 
         function getDataExtend(to) {
+            // debugger;
             var itemInfoGetData = [];
             for (var i = 0; i < itemInfos.length; i++) {
                 var item = {};
-                item.itemId = itemInfos[i].itemId;
-                item.from = 0;
-                item.to = 0;
+                item.itemId = itemInfos[i].itemId.valueOf();
+                item.from = to;
+                item.to = to;
                 if (itemInfos[i].to < to) {
-                    item.from = itemInfos[i].to;
-                    item.to = to;
-                    itemInfos[i].to = to;
+                    item.from = itemInfos[i].to.valueOf();
                 }
                 itemInfoGetData.push(item);
             }
             return itemInfoGetData;
+        }
+
+        function updateAfterPrependData(res) {
+            console.log('Susccess prepend traces: ', res);
+            var updateData = res.data;
+            console.log('Infos: ', itemInfos);
+            console.log('Item get: ', res.itemInfo);
+            console.log('Susccess prepend traces: ', updateData);
+            for (var i = 0; i < (dataLength - itemIdsLength); i++) {
+                updateData.x.push([]);
+                updateData.y.push([]);
+            }
+            for (var i = 0; i < updateData.x.length; i++) {
+                if (updateData.x[i].length > 0) {
+                    itemInfos[i].from = res.itemInfo[i].from;
+                }
+            }
+            console.log('Add null value for prepend: ', updateData);
+            Plotly.prependTraces(myPlot, updateData, updateTracert);
+        }
+
+        function updateAfterExtendData(res, to) {
+            console.log('Susccess extend traces: ', res);
+            var updateData = res.data;
+            console.log('Item get: ', res.itemInfo);
+            console.log('Susccess: ', updateData);
+            for (var i = 0; i < (dataLength - itemIdsLength); i++) {
+                updateData.x.push([]);
+                updateData.y.push([]);
+            }
+            // debugger;
+            for (var i = 0; i < updateData.x.length; i++) {
+                if (updateData.x[i].length > 0) {
+                    itemInfos[i].to = res.itemInfo[i].to;
+                }
+            }
+            console.log('Infos after change: ', itemInfos);
+            console.log('Add null value for extend: ', updateData);
+            Plotly.extendTraces(myPlot, updateData, updateTracert);
         }
 
         $yAxisPosition = parseInt($('tspan').attr('y'),10) + 50;
