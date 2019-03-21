@@ -71,7 +71,7 @@ function createDataLine($xData, $yData, $mode, $name = null, $connectgaps = true
     ]);
 }
 
-function createXAxisLayoutLine($type = null, $title = null, $autorange = true, $rangeselector = null, $rangeslider = null)
+function createXAxisLayoutLine($type = null, $title = null, $autorange = true, $tickangle = TICK_ANGLE_DEFAULT, $rangeselector = null, $rangeslider = null)
 {
     return collect([
         "autorange" => $autorange,
@@ -79,6 +79,15 @@ function createXAxisLayoutLine($type = null, $title = null, $autorange = true, $
         "title" => $title,
         "rangeslider" => $rangeslider,
         "rangeselector" => $rangeselector,
+        "tickangle" => $tickangle,
+        "tickfont" => [
+            "family" => "Old Standard TT, serif",
+            "size" => 12,
+            "color" => "black"
+        ],
+        // "ticks" => "outside",
+        "nticks" => 40,
+        // "dtick" => 10000000,
     ]);
 }
 
@@ -89,7 +98,8 @@ function createYAxisLayoutLine($type = null, $title = null, $ticksuffix = "", $a
         "type" => $type,
         "title" => $title,
         "ticksuffix" => ' ' . $ticksuffix,
-        "exponentformat" => "B"
+        "exponentformat" => "B",
+        "fixedrange" => true
     ]);
 }
 
@@ -335,7 +345,7 @@ function getDataAndLayoutFromGraph($graphid, $databaseConnection, $from = 0, $to
             $rangeslider = collect();
             $rangeselector = collect(['buttons' => getSelectorOption(['1min', '1h', '1d', '1m', '3m', '6m', 'ytd', '1y'])]);
             $layout = createLayoutLine(
-                createXAxisLayoutLine('date', null, true, $rangeselector, null),
+                createXAxisLayoutLine('date', null, true, -90, $rangeselector, null),
                 createYAxisLayoutLine(null, null,  $items[0]->units, true),
                 $graph->name
             );
@@ -364,7 +374,7 @@ function getDataAndLayoutFromGraph($graphid, $databaseConnection, $from = 0, $to
             $rangeslider = collect();
             $rangeselector = collect(['buttons' => getSelectorOption(['1min', '1h', '1d', '1m', '3m', '6m', 'ytd', '1y'])]);
             $layout = createLayoutLine(
-                createXAxisLayoutLine('date', null, true, $rangeselector, null),
+                createXAxisLayoutLine('date', null, true, -90, $rangeselector, null),
                 createYAxisLayoutLine(null, null, null, true),
                 $graph->name
             );

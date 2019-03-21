@@ -89,18 +89,16 @@
         var data = {!!$data!!};
         var dataLength = {{count($data)}};
         var layout = {!!$layout!!}
-
+        layout.autosize = true;
         // layout.width = 1000;
-        // layout.height = 800;
+        layout.height = 500;
+
         var myPlot = document.getElementById('plotid');
         Plotly.plot(myPlot, data, layout).then(gd => {
             gd.on('plotly_legendclick', () => false)
         });
 
-        $yAxisPosition = parseInt($('tspan').attr('y'),10) + 50;
-        if ({{$graphtype}} != 2) {
-            document.getElementsByClassName('legend')[0].setAttribute("transform", "translate(50," + ($yAxisPosition)  +")");
-        }
+        setLegendPosition();
 
         var updateTracert = new Array();
         for (var i = 0; i < data.length; i++) {
@@ -130,7 +128,7 @@
                 // console.log("to: ", to);
                 // console.log('itemInfos:: ', itemInfos);
                 var itemInfoGetData = getDataExtend(to);
-                // console.log('itemInfoGetData: ', itemInfoGetData);
+                console.log('extend itemInfoGetData: ', itemInfoGetData);
 
                 $.ajax({
                     type: 'GET',
@@ -142,12 +140,13 @@
                     dataType: 'json',
                     success: function (res) {
                         updateAfterExtendData(res);
+                        setLegendPosition();
                     },
                     error: function (error) {
                         console.log('Error:', error);
                     }
                 });
-            }, 10000);
+            }, 60000);
         }
 
         myPlot.on('plotly_relayout', function(data){
@@ -155,7 +154,7 @@
                 var from = getUnixTime(new Date(data["xaxis.range[0]"]).getTime());
                 var itemInfoGetData = getDataPrepend(from);
                 // console.log("from: ", from);
-                // console.log('itemInfoGetData: ', itemInfoGetData);
+                console.log('relayout itemInfoGetData: ', itemInfoGetData);
                 // console.log('itemInfos: ', itemInfos);
 
                 $.ajax({
@@ -168,6 +167,7 @@
                     dataType: 'json',
                     success: function (res) {
                         updateAfterPrependData(res);
+                        setLegendPosition();
                     },
                     error: function (error) {
                         console.log('Error:', error);
@@ -175,6 +175,13 @@
                 });
             }
         });
+
+        function setLegendPosition() {
+            $yAxisPosition = parseInt($('tspan').attr('y'),10) + 80;
+            if ({{$graphtype}} != 2) {
+                document.getElementsByClassName('legend')[0].setAttribute("transform", "translate(50," + ($yAxisPosition)  +")");
+            }
+        }
 
         function getDataPrepend(from) {
             var itemInfoGetData = [];
@@ -210,7 +217,7 @@
 
         function updateAfterPrependData(res) {
             var updateData = res.data;
-            // console.log('Infos: ', itemInfos);
+            console.log('updateAfterPrependData : ', res);
             // console.log('Item get: ', res.itemInfo);
             // console.log('Susccess prepend traces: ', updateData);
             for (var i = 0; i < (dataLength - itemIdsLength); i++) {
@@ -228,7 +235,7 @@
 
         function updateAfterExtendData(res, to) {
             var updateData = res.data;
-            // console.log('Item get: ', res.itemInfo);
+            console.log('updateAfterExtendData : ', res);
             // console.log('Susccess: ', updateData);
             for (var i = 0; i < (dataLength - itemIdsLength); i++) {
                 updateData.x.push([]);
