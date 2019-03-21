@@ -7,6 +7,7 @@ use App\Group;
 use App\Host;
 use App\LocalServer;
 use App\Item;
+use Illuminate\Support\Facades\DB;
 
 class GraphController extends Controller
 {
@@ -31,13 +32,13 @@ class GraphController extends Controller
             $requestLocalId = $firstLocalServer->id;
         }
 
+        //create connection if connection doesn't exists
         $databaseConnection = LocalServer::find($requestLocalId)->database;
         $config = getDatabaseConnection($databaseConnection);
 
         if (!$config) {
             createDatabaseConnectionByDatabaseName($databaseConnection, $databaseConnection);
         }
-        $config = getDatabaseConnection($databaseConnection);
         setGlobalDatabaseConnection($databaseConnection);
 
         $GROUP = new Group;
@@ -90,18 +91,16 @@ class GraphController extends Controller
         $layout = collect();
         $firstTick = 0;
         $lastTick = 0;
-
-        // return $maxClock;
-        // list($data, $layout) = getDataAndLayoutFromGraph($rq_graphid, $databaseConnection, $from, $to);
-        // list($data, $layout) = getDataAndLayoutFromGraph($rq_graphid, $databaseConnection);
-
         $graphtype = 0;
+
         if ($rq_graphid != 0) {
             $to = getLastDataTickerTimeFromGraph($rq_graphid, $databaseConnection);
-            $from = $to - 86400;
-            $graph = Graph::on(getGlobalDatabaseConnection())->find($rq_graphid);
-            $graphtype = $graph->graphtype;
-            list($data, $layout, $firstTick, $lastTick) = getDataAndLayoutFromGraph($rq_graphid, $databaseConnection, $from, $to);
+            if ($to > 0) {
+                $from = $to - 86400;
+                $graph = Graph::on(getGlobalDatabaseConnection())->find($rq_graphid);
+                $graphtype = $graph->graphtype;
+                list($data, $layout, $firstTick, $lastTick) = getDataAndLayoutFromGraph($rq_graphid, $databaseConnection, $from, $to);
+            }
             // list($data, $layout) = getDataAndLayoutFromGraph($rq_graphid, $databaseConnection);
         }
         // dd($graphtype);

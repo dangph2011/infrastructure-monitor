@@ -935,5 +935,8 @@ function getLastDataTickerTime($itemid, $data_type, $databaseConnection = 'zabbi
     }
 
     $tableData = DB::connection($databaseConnection)->table($table)->where('itemid', $itemid)->orderBy('clock','desc')->take(1)->first();
+    if ($tableData == null) {
+        return 0;
+    }
     return $tableData->clock;
 }
