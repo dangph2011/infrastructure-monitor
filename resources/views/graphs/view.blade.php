@@ -97,6 +97,11 @@
             gd.on('plotly_legendclick', () => false)
         });
 
+        $yAxisPosition = parseInt($('tspan').attr('y'),10) + 50;
+        if ({{$graphtype}} != 2) {
+            document.getElementsByClassName('legend')[0].setAttribute("transform", "translate(50," + ($yAxisPosition)  +")");
+        }
+
         var updateTracert = new Array();
         for (var i = 0; i < data.length; i++) {
             updateTracert.push(i);
@@ -239,11 +244,6 @@
             // console.log('Add null value for extend: ', updateData);
             Plotly.extendTraces(myPlot, updateData, updateTracert);
         }
-
-        $yAxisPosition = parseInt($('tspan').attr('y'),10) + 50;
-        /*if ({{$graphtype}} != 2) {
-            document.getElementsByClassName('legend')[0].setAttribute("transform", "translate(50," + ($yAxisPosition)  +")");
-        }*/
 
         function getUnixTime(timeDate) {
             return Math.floor(timeDate / 1000);
