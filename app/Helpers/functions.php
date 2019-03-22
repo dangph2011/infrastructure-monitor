@@ -88,6 +88,7 @@ function createXAxisLayoutLine($type = null, $title = null, $autorange = true, $
         // "ticks" => "outside",
         "nticks" => 40,
         // "dtick" => 10000000,
+        "rangemode" => "true"
     ]);
 }
 
@@ -99,7 +100,8 @@ function createYAxisLayoutLine($type = null, $title = null, $ticksuffix = "", $a
         "title" => $title,
         "ticksuffix" => ' ' . $ticksuffix,
         "exponentformat" => "B",
-        "fixedrange" => true
+        "fixedrange" => true,
+        "rangemode" => "true"
     ]);
 }
 
@@ -151,7 +153,7 @@ function smoothClockData($clockValue, $delayTime, $smooth = true, $from = 0, $to
         return;
     }
     $timestamp = 0;
-    foreach ($clockValue[0] as $key => $clock) {
+    for ($key = 0; $key < $clockValue[0]->count(); $key++) {
         if ($key > 0) {
             if ($clockValue[0][$key] - $timestamp > (2 * $delayTime)) {
                 $clockValue[0]->splice($key, 0, $timestamp + $delayTime);
@@ -166,7 +168,7 @@ function smoothClockData($clockValue, $delayTime, $smooth = true, $from = 0, $to
 
     //get length of clock value
     // $clockValueLength = count($clockValue[0]);
-    // if (count($clockValue[0]) > 0 && $to > 0) {
+    // if ($clockValueLength > 0 && $to > 0) {
     //     // dd($to);
     //     // $a = $to - $clockValue[0][$clockValueLength-1] > (2 * $delayTime);
     //     if ($to*1000 - $clockValue[0][$clockValueLength-1] > (2 * $delayTime)) {
@@ -288,6 +290,7 @@ function getDataAndLayoutFromGraph($graphid, $databaseConnection, $from = 0, $to
         if ($graph->graphtype == GRAPH_TYPE_NORMAL) {
             //onlye show trigger in line graph
             // for ($i = 0; $i < $items->count(); i++)
+            // $items->each(function ($item) use ($data, $databaseConnection, $firstTick, $lastTick, $table, $from, $to) {
             foreach ($items as $item) {
                 //get data
                 $fill = "none";
@@ -320,7 +323,7 @@ function getDataAndLayoutFromGraph($graphid, $databaseConnection, $from = 0, $to
                         break;
 
                     case GRAPH_ITEM_DRAWTYPE_GRADIENT_LINE:
-                        $fill = "tozeroy";
+                        // $fill = "tozeroy";
                         break;
 
                     case GRAPH_ITEM_DRAWTYPE_BOLD_DOT:
@@ -487,6 +490,22 @@ function getClockAndValueNumericData($itemid, $data_type, $databaseConnection = 
         });
     }
     return array(collect([$xData, $yData]), $firstTick, $lastTick);
+}
+
+function ajaxGetRangeValue($itemid, $data_type, $databaseConnection = 'zabbix', $table = 'history', $from = 0, $to = 2147483647)
+{
+    // $table = 'history';
+    if ($data_type == ITEM_VALUE_TYPE_UNSIGNED) {
+        $table .= '_uint';
+    }
+
+    $min = DB::connection($databaseConnection)->table($table)->where('itemid', $itemid)->where('clock', ">", $from)
+        ->where('clock', "<=", $to)->min('value');
+
+    $max = DB::connection($databaseConnection)->table($table)->where('itemid', $itemid)->where('clock', ">", $from)
+    ->where('clock', "<=", $to)->max('value');
+
+    return array($min, $max);
 }
 
 function getLocalServerSchema() {

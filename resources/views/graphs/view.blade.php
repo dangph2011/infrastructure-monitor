@@ -98,6 +98,9 @@
             gd.on('plotly_legendclick', () => false)
         });
 
+        var connection = "{{getGlobalDatabaseConnection()}}";
+
+        ajaxGetYaxisRange(connection, {{$rq_graphid}});
         setLegendPosition();
 
         var updateTracert = new Array();
@@ -129,23 +132,8 @@
                 // console.log('itemInfos:: ', itemInfos);
                 var itemInfoGetData = getDataExtend(to);
                 console.log('extend itemInfoGetData: ', itemInfoGetData);
-
-                $.ajax({
-                    type: 'GET',
-                    url: '/ajax/chart/item',
-                    data: {
-                        "databaseConnection": "{{getGlobalDatabaseConnection()}}",
-                        "itemInfos": JSON.stringify(itemInfoGetData),
-                    },
-                    dataType: 'json',
-                    success: function (res) {
-                        updateAfterExtendData(res);
-                        setLegendPosition();
-                    },
-                    error: function (error) {
-                        console.log('Error:', error);
-                    }
-                });
+                ajaxGetDataOnChart(connection, itemInfoGetData, 'extend');
+                //auto scale yaxis
             }, 60000);
         }
 
@@ -156,25 +144,72 @@
                 // console.log("from: ", from);
                 console.log('relayout itemInfoGetData: ', itemInfoGetData);
                 // console.log('itemInfos: ', itemInfos);
-
-                $.ajax({
-                    type: 'GET',
-                    url: '/ajax/chart/item',
-                    data: {
-                        "databaseConnection": "{{getGlobalDatabaseConnection()}}",
-                        "itemInfos": JSON.stringify(itemInfoGetData),
-                    },
-                    dataType: 'json',
-                    success: function (res) {
-                        updateAfterPrependData(res);
-                        setLegendPosition();
-                    },
-                    error: function (error) {
-                        console.log('Error:', error);
-                    }
-                });
+                ajaxGetDataOnChart(connection, itemInfoGetData, "prepend");
             }
         });
+
+        function ajaxGetDataOnChart(connection, itemInfoGetData, getType) {
+            $.ajax({
+                type: 'GET',
+                url: '/ajax/chart/item',
+                data: {
+                    "databaseConnection": connection,
+                    "itemInfos": JSON.stringify(itemInfoGetData),
+                },
+                dataType: 'json',
+                success: function (res) {
+                    if (getType == 'extend') {
+                        updateAfterExtendData(res);
+                    } else if (getType == 'prepend') {
+                        updateAfterPrependData(res);
+                    }
+
+                    ajaxGetYaxisRange(connection, {{$rq_graphid}});
+                    setLegendPosition();
+                },
+                error: function (error) {
+                    console.log('Error:', error);
+                }
+            });
+        }
+
+        function ajaxGetYaxisRange(connection, graphId, xFirstTick = 0, xLastTick = 0) {
+            if (xFirstTick == 0) {
+                xFirstTick = getUnixTime(new Date(myPlot.layout.xaxis.range[0]).getTime());
+            };
+
+            if (xLastTick == 0) {
+                xLastTick = getUnixTime(new Date(myPlot.layout.xaxis.range[1]).getTime());
+            }
+
+            $.ajax({
+                type: 'GET',
+                url: '/ajax/chart/range',
+                data: {
+                    "databaseConnection": connection,
+                    "graphid": graphId,
+                    "firstTick" : xFirstTick,
+                    "lastTick" : xLastTick
+                },
+                dataType: 'json',
+                success: function (res) {
+                    console.log("aaa: ", res);
+                    updateScaleYaxis(res);
+                },
+                error: function (error) {
+                    console.log('Error:', error);
+                }
+            });
+        }
+
+        function updateScaleYaxis(res) {
+            if (res.min == null || res.max == null) return;
+            var update = {
+                'yaxis.range': [res.min, res.max*110/100],   // updates the xaxis range
+            };
+            console.log("update range: ", update);
+            Plotly.relayout(myPlot, update);
+        }
 
         function setLegendPosition() {
             $yAxisPosition = parseInt($('tspan').attr('y'),10) + 80;

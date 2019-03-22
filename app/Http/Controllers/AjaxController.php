@@ -134,4 +134,45 @@ class AjaxController extends Controller
 
         return $result;
     }
+
+    public function ajaxGetRangeValue() {
+        $databaseConnection = request('databaseConnection', "");
+        if ($databaseConnection == "" ) {
+            return null;
+        }
+        $graphid = request('graphid', 0);
+        $firstTick = request('firstTick', 0);
+        $lastTick = request('lastTick', 2147483647);
+
+        $GRAPH = new Graph;
+        $GRAPH->setConnection($databaseConnection);
+        $ITEM = new Item;
+        $ITEM->setConnection($databaseConnection);
+        $table = "history";
+        //set orientation of legend
+
+        $minCol = collect();
+        $maxCol = collect();
+
+        if ($graphid != 0) {
+            $graph = $GRAPH->find($graphid);
+            $items = $GRAPH->find($graphid)->items->sortBy('pivot_sortorder');
+
+            if ($graph->graphtype == GRAPH_TYPE_NORMAL || $graph->graphtype == GRAPH_TYPE_STACKED) {
+                //onlye show trigger in line graph
+                foreach ($items as $item) {
+                    list($min, $max) = ajaxGetRangeValue($item->itemid, $item->value_type, $databaseConnection, $table, $firstTick, $lastTick);
+                    $minCol->push($min);
+                    $maxCol->push($max);
+                }
+            }
+        }
+
+        $result = collect([
+            "min" => $minCol->min(),
+            "max" => $maxCol->max(),
+        ]);
+
+        return $result;
+    }
 }
