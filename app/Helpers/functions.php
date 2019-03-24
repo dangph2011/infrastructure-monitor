@@ -276,8 +276,7 @@ function getDataAndLayoutFromGraph($graphid, $databaseConnection, $from = 0, $to
     //set orientation of legend
     $table = "history";
     $clockValue = collect();
-    $firstTick = 0;
-    $lastTick = 0;
+    $itemInfos = collect();
 
     if ($graphid != 0) {
         $graph = $GRAPH->find($graphid);
@@ -335,7 +334,14 @@ function getDataAndLayoutFromGraph($graphid, $databaseConnection, $from = 0, $to
                         break;
                 }
 
-                list($clockValue, $firstTick, $lastTick) = getClockAndValueNumericData($item->itemid, $item->value_type, $databaseConnection, $table, $from, $to);
+                list($clockValue, $ft, $lt) = getClockAndValueNumericData($item->itemid, $item->value_type, $databaseConnection, $table, $from, $to);
+                $itemInfo = collect([
+                    "itemId" => $item->itemid,
+                    "from" => $ft,
+                    "to" => $lt
+                ]);
+
+                $itemInfos->push($itemInfo);
                 //get delay time to handle gaps data
                 $delayTime = convertToTimestamp($item->delay);
                 //add null to gaps data
@@ -365,6 +371,14 @@ function getDataAndLayoutFromGraph($graphid, $databaseConnection, $from = 0, $to
                 $fillcolor = $item->pivot->color;
 
                 list($clockValue, $firstTick, $lastTick) = getClockAndValueNumericData($item->itemid, $item->value_type, $databaseConnection, 'trends');
+                $itemInfo = collect([
+                    "itemId" => $item->itemid,
+                    "from" => $ft,
+                    "to" => $lt
+                ]);
+
+                $itemInfos->push($itemInfo);
+
                 //get delay time to handle gaps data
                 $delayTime = convertToTimestamp($item->delay);
                 //add null to gaps data
@@ -394,6 +408,14 @@ function getDataAndLayoutFromGraph($graphid, $databaseConnection, $from = 0, $to
             foreach ($items as $item) {
             // $items->each(function ($item) use ($value, $label, $databaseConnection, $units, &$sum) {
                 list($clockValue, $firstTick, $lastTick) = getClockAndValueNumericData($item->itemid, $item->value_type, $databaseConnection);
+                $itemInfo = collect([
+                    "itemId" => $item->itemid,
+                    "from" => $ft,
+                    "to" => $lt
+                ]);
+
+                $itemInfos->push($itemInfo);
+
                 if ($item->pivot->type == 2) {
                     $value->prepend($clockValue[1]->avg());
                     $label->prepend($item->name);
@@ -441,7 +463,7 @@ function getDataAndLayoutFromGraph($graphid, $databaseConnection, $from = 0, $to
         }
     }
 
-    return array($data, $layout, $firstTick, $lastTick);
+    return array($data, $layout, $itemInfos);
 }
 
 function setOrientedLegend($showlegend, $oriented, $x, $y) {

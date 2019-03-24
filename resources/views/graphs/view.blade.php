@@ -94,9 +94,12 @@
         layout.height = 500;
 
         var myPlot = document.getElementById('plotid');
-        Plotly.plot(myPlot, data, layout).then(gd => {
-            gd.on('plotly_legendclick', () => false)
-        });
+        Plotly.plot(myPlot, data, layout, {
+                    doubleClick: false,
+                    scrollZoom: true
+                }).then(gd => {
+                    gd.on('plotly_legendclick', () => false)
+                });
 
         var connection = "{{getGlobalDatabaseConnection()}}";
 
@@ -109,23 +112,10 @@
         }
 
         var requestId = {{$rq_graphid}};
-        var itemIdsLength = 0;
+        var itemInfos = {!!$itemInfos!!};
+        var itemIdsLength = itemInfos.length;
 
         if (requestId > 0) {
-            var itemIds = {{getListItemIdByGraphId($rq_graphid, getGlobalDatabaseConnection())}};
-            var itemIdsLength = itemIds.length;
-
-            var from = [];
-            var to = [];
-            var itemInfos = [];
-            for (var i = 0; i < itemIdsLength; i++) {
-                var itemInfo = {};
-                itemInfo.itemId = itemIds[i];
-                itemInfo.from = {{$firstTick}};
-                itemInfo.to = {{$lastTick}};
-                itemInfos.push(itemInfo);
-            }
-
             var interval = setInterval(function() {
                 var to = getUnixTime(Date.now());
                 // console.log("to: ", to);
@@ -141,12 +131,15 @@
             if (data["xaxis.range[0]"] != undefined) {
                 var from = getUnixTime(new Date(data["xaxis.range[0]"]).getTime());
                 var itemInfoGetData = getDataPrepend(from);
-                // console.log("from: ", from);
+                console.log("from: ", from);
+                console.log("itemInfos: ", itemInfos);
                 console.log('relayout itemInfoGetData: ', itemInfoGetData);
                 // console.log('itemInfos: ', itemInfos);
                 ajaxGetDataOnChart(connection, itemInfoGetData, "prepend");
             }
         });
+
+        myPlot.on('plotly_doubleclick',  () => false);
 
         function ajaxGetDataOnChart(connection, itemInfoGetData, getType) {
             $.ajax({

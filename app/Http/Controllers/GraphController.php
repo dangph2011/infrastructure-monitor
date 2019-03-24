@@ -89,8 +89,7 @@ class GraphController extends Controller
 
         $data = collect();
         $layout = collect();
-        $firstTick = 0;
-        $lastTick = 0;
+        $itemInfos = collect();
         $graphtype = 0;
 
         if ($rq_graphid != 0) {
@@ -99,15 +98,16 @@ class GraphController extends Controller
                 $from = $to - 86400;
                 $graph = Graph::on(getGlobalDatabaseConnection())->find($rq_graphid);
                 $graphtype = $graph->graphtype;
-                list($data, $layout, $firstTick, $lastTick) = getDataAndLayoutFromGraph($rq_graphid, $databaseConnection, $from, $to);
+                list($data, $layout, $itemInfos) = getDataAndLayoutFromGraph($rq_graphid, $databaseConnection, $from, $to);
             }
             // list($data, $layout) = getDataAndLayoutFromGraph($rq_graphid, $databaseConnection);
         }
         // dd($graphtype);
         // return $layout;
         // return $data;
+        // return $itemInfos;
         return view('graphs.view', compact('groups', 'hosts', 'rq_groupid', 'graphs', 'rq_hostid', 'data', 'layout', 'rq_graphid',
-                        'localServers', 'requestLocalId', 'graphtype', 'firstTick', 'lastTick'));
+                        'localServers', 'requestLocalId', 'graphtype', 'itemInfos'));
     }
 
     public function create()
