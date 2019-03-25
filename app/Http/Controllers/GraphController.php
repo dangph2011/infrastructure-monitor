@@ -7,7 +7,6 @@ use App\Group;
 use App\Host;
 use App\LocalServer;
 use App\Item;
-use Illuminate\Support\Facades\DB;
 
 class GraphController extends Controller
 {
@@ -41,21 +40,15 @@ class GraphController extends Controller
         }
         setGlobalDatabaseConnection($databaseConnection);
 
-        $GROUP = new Group;
-        $HOST = new Host;
-        $GRAPH = new Graph;
-        $ITEM = new Item;
-        $GROUP->setConnection($databaseConnection);
-        $HOST->setConnection($databaseConnection);
-        $GRAPH->setConnection($databaseConnection);
-        $ITEM->setConnection($databaseConnection);
+        $GROUP = (new Group)->setConnection($databaseConnection);
+        $HOST = (new Host)->setConnection($databaseConnection);;
+        $GRAPH = (new Graph)->setConnection($databaseConnection);;
+        $ITEM = (new Item)->setConnection($databaseConnection);;
 
         $groupids = collect();
         $hostids = collect();
         // $graphid = 0;
 
-        // $groups = Group::on('zabbix')->getGroup();
-        // $groups = $GROUP->getGroup($GROUP);
         $groups = $GROUP->getGroup();
 
         //Get groupId request
@@ -86,7 +79,6 @@ class GraphController extends Controller
         $graphs = $GRAPH->getGraphByGroupAndHost($hostids);
 
         //get items based on selected graph
-
         $data = collect();
         $layout = collect();
         $itemInfos = collect();

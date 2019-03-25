@@ -147,7 +147,6 @@ function createDataStacked($x_data, $y_data, $name, $stackgroup, $groupnorm, $fi
 
 function smoothClockData($clockValue, $delayTime, $smooth = true, $from = 0, $to = 0)
 {
-    // return;
     //add null to missing data
     if (count($clockValue[0])  == 0) {
         return;
@@ -343,7 +342,11 @@ function getDataAndLayoutFromGraph($graphid, $databaseConnection, $from = 0, $to
 
                 $itemInfos->push($itemInfo);
                 //get delay time to handle gaps data
-                $delayTime = convertToTimestamp($item->delay);
+                if ($table == "trends") {
+                    $delayTime = SEC_PER_HOUR * 1000;
+                } else {
+                    $delayTime = convertToTimestamp($item->delay);
+                }
                 //add null to gaps data
                 smoothClockData($clockValue, $delayTime);
 
@@ -380,7 +383,11 @@ function getDataAndLayoutFromGraph($graphid, $databaseConnection, $from = 0, $to
                 $itemInfos->push($itemInfo);
 
                 //get delay time to handle gaps data
-                $delayTime = convertToTimestamp($item->delay);
+                if ($table == "trends") {
+                    $delayTime = SEC_PER_HOUR * 1000;
+                } else {
+                    $delayTime = convertToTimestamp($item->delay);
+                }
                 //add null to gaps data
                 smoothClockData($clockValue, $delayTime, false);
                 //create data stacked
@@ -514,19 +521,38 @@ function getClockAndValueNumericData($itemid, $data_type, $databaseConnection = 
     return array(collect([$xData, $yData]), $firstTick, $lastTick);
 }
 
-function ajaxGetRangeValue($itemid, $data_type, $databaseConnection = 'zabbix', $table = 'history', $from = 0, $to = 2147483647)
+function getRangeValue($itemid, $data_type, $databaseConnection = 'zabbix', $table = 'history', $from = 0, $to = 2147483647)
 {
     // $table = 'history';
     if ($data_type == ITEM_VALUE_TYPE_UNSIGNED) {
         $table .= '_uint';
     }
 
-    $min = DB::connection($databaseConnection)->table($table)->where('itemid', $itemid)->where('clock', ">", $from)
+    if (starts_with($table, 'history')) {
+        $min = DB::connection($databaseConnection)->table($table)->where('itemid', $itemid)->where('clock', ">", $from)
         ->where('clock', "<=", $to)->min('value');
 
-    $max = DB::connection($databaseConnection)->table($table)->where('itemid', $itemid)->where('clock', ">", $from)
-    ->where('clock', "<=", $to)->max('value');
+        $max = DB::connection($databaseConnection)->table($table)->where('itemid', $itemid)->where('clock', ">", $from)
+        ->where('clock', "<=", $to)->max('value');
+    } else if (starts_with($table, 'trends')) {
+        $min = DB::connection($databaseConnection)->table($table)->where('itemid', $itemid)->where('clock', ">", $from)
+        ->where('clock', "<=", $to)->min('value_avg');
 
+        $max = DB::connection($databaseConnection)->table($table)->where('itemid', $itemid)->where('clock', ">", $from)
+        ->where('clock', "<=", $to)->max('value_avg');
+    }
+
+    return array($min, $max);
+}
+
+function getRangeClock($itemid, $data_type, $databaseConnection = 'zabbix', $table = 'history')
+{
+    // $table = 'history';
+    if ($data_type == ITEM_VALUE_TYPE_UNSIGNED) {
+        $table .= '_uint';
+    }
+    $min = DB::connection($databaseConnection)->table($table)->where('itemid', $itemid)->min('clock');
+    $max = DB::connection($databaseConnection)->table($table)->where('itemid', $itemid)->max('clock');
     return array($min, $max);
 }
 
@@ -859,6 +885,7 @@ function getDataFromGraphId($graphid, $databaseConnection)
     $clockValue = collect();
     $firstTick = 0;
     $lastTick = 0;
+    $table = "trends";
 
     if ($graphid != 0) {
         $graph = $GRAPH->find($graphid);
@@ -867,11 +894,15 @@ function getDataFromGraphId($graphid, $databaseConnection)
         if ($graph->graphtype == GRAPH_TYPE_NORMAL) {
             //onlye show trigger in line graph
 
-            $items->each(function ($item) use ($data, $ITEM, $databaseConnection) {
+            $items->each(function ($item) use ($data, $ITEM, $databaseConnection, $table) {
                 //get data
                 list($clockValue, $firstTick, $lastTick) = getClockAndValueNumericData($item->itemid, $item->value_type, $databaseConnection);
                 //get delay time to handle gaps data
-                $delayTime = convertToTimestamp($item->delay);
+                if ($table == "trends") {
+                    $delayTime = SEC_PER_HOUR * 1000;
+                } else {
+                    $delayTime = convertToTimestamp($item->delay);
+                }
                 //add null to gaps data
                 smoothClockData($clockValue, $delayTime);
 
@@ -881,11 +912,15 @@ function getDataFromGraphId($graphid, $databaseConnection)
             //Draw line graph
         } elseif ($graph->graphtype == GRAPH_TYPE_STACKED) {
             //Draw stacked (area chart)
-            $items->each(function ($item) use ($data, $ITEM, $databaseConnection) {
+            $items->each(function ($item) use ($data, $ITEM, $databaseConnection, $table) {
 
                 list($clockValue, $firstTick, $lastTick) = getClockAndValueNumericData($item->itemid, $item->value_type, $databaseConnection, 'trends');
                 //get delay time to handle gaps data
-                $delayTime = convertToTimestamp($item->delay);
+                if ($table == "trends") {
+                    $delayTime = SEC_PER_HOUR * 1000;
+                } else {
+                    $delayTime = convertToTimestamp($item->delay);
+                }
                 //add null to gaps data
                 smoothClockData($clockValue, $delayTime, false);
                 //create data stacked

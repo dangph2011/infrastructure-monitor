@@ -68,7 +68,11 @@ class AjaxController extends Controller
                 foreach ($items as $item) {
                     list($clockValue, $firstTick, $lastTick) = getClockAndValueNumericData($item->itemid, $item->value_type, $databaseConnection, $table, $from, $to);
                     //get delay time to handle gaps data
-                    $delayTime = convertToTimestamp($item->delay);
+                    if ($table == "trends") {
+                        $delayTime = SEC_PER_HOUR * 1000;
+                    } else {
+                        $delayTime = convertToTimestamp($item->delay);
+                    }
                     //add null to gaps data
                     smoothClockData($clockValue, $delayTime,true);
                     $data->push(getNewDataLine($clockValue[0], $clockValue[1]));
@@ -100,25 +104,88 @@ class AjaxController extends Controller
         }
 
         $data = collect();
-        $table = "history";
+        $table = "trends";
         $clockValue = collect();
         $firstTick = 0;
         $lastTick = 0;
+
+        // $item['source'] = ($item['trends'] == 0 || ($item['history'] > time() - ($this->from_time + $this->period / 2)
+		// 			&& $this->period / $this->sizeX <= ZBX_MAX_TREND_DIFF / ZBX_GRAPH_MAX_SKIP_CELL))
+        //             ? 'history' : 'trends';
+
         //set orientation of legend
         for ($i = 0; $i < count($itemInfos); $i++) {
             $item = Item::on($databaseConnection)->find($itemInfos[$i]->itemId);
+
+            list($min, $max) = getRangeClock($item->itemid, $item->value_type, $databaseConnection, "history");
+
             $from = $itemInfos[$i]->from;
             $to = $itemInfos[$i]->to;
 
-            list($clockValue, $firstTick, $lastTick) = getClockAndValueNumericData($item->itemid, $item->value_type, $databaseConnection, $table, $from, $to);
-            $itemInfos[$i]->from = $firstTick;
-            $itemInfos[$i]->to = $lastTick;
+            $tableInfo = collect();
+            if ($from < $min && $to < $min) {
+                $tbl = [
+                    "table" => "trends",
+                    "from" => $from,
+                    "to" => $to
+                ];
+                $tableInfo->push($tbl);
+            } else if ($from < $min && $to > $min) {
+                $tableInfo->push([
+                    "table" => "history",
+                    "from" => $min,
+                    "to" => $to
+                ]);
+                $tableInfo->push([
+                    "table" => "trends",
+                    "from" => $from,
+                    "to" => $min
+                ]);
 
-            //get delay time to handle gaps data
-            $delayTime = convertToTimestamp($item->delay);
-            //add null to gaps data
-            smoothClockData($clockValue, $delayTime, true, $from, $to);
-            $data->push(getNewDataLine($clockValue[0], $clockValue[1]));
+            } else if ($from > $min && $to > $min) {
+                $tbl = [
+                    "table" => "history",
+                    "from" => $from,
+                    "to" => $to
+                ];
+                $tableInfo->push($tbl);
+            }
+
+            $clockValues = collect([collect(),collect()]);
+            $minCol = collect();
+            $maxCol = collect();
+
+            for ($j = 0; $j < $tableInfo->count(); $j++) {
+                $tbl = $tableInfo[$j];
+                // dd($tbl);
+                list($clockValue, $firstTick, $lastTick) = getClockAndValueNumericData($item->itemid, $item->value_type, $databaseConnection, $tbl["table"], $tbl["from"], $tbl["to"]);
+                $minCol->push($firstTick);
+                $maxCol->push($lastTick);
+
+                //get delay time to handle gaps data
+                if ($tbl["table"] == "trends") {
+                    $delayTime = SEC_PER_HOUR * 1000;
+                } else {
+                    $delayTime = convertToTimestamp($item->delay);
+                }
+                //add null to gaps data
+                smoothClockData($clockValue, $delayTime, true, $from, $to);
+
+                if ($j > 0 && count($clockValues[0]) > 0) {
+                    if ($clockValues[0][0] != null && ($clockValues[0][0] - $clockValue[0][0] > (2 * $delayTime))) {
+                        $clockValues[0]->splice(0, 0, $clockValues[0][0] + 2 * $delayTime);
+                        $clockValues[1]->splice(0, 0, "null");
+                    }
+                }
+
+                $clockValues[0]->splice(0, 0, $clockValue[0]->toArray());
+                $clockValues[1]->splice(0, 0, $clockValue[1]->toArray());
+            }
+
+            $itemInfos[$i]->from = $minCol->min();
+            $itemInfos[$i]->to = $maxCol->max();
+
+            $data->push(getNewDataLine($clockValues[0], $clockValues[1]));
         }
 
         $value = null;
@@ -148,8 +215,6 @@ class AjaxController extends Controller
         $GRAPH->setConnection($databaseConnection);
         $ITEM = new Item;
         $ITEM->setConnection($databaseConnection);
-        $table = "history";
-        //set orientation of legend
 
         $minCol = collect();
         $maxCol = collect();
@@ -160,10 +225,43 @@ class AjaxController extends Controller
 
             if ($graph->graphtype == GRAPH_TYPE_NORMAL || $graph->graphtype == GRAPH_TYPE_STACKED) {
                 //onlye show trigger in line graph
+
                 foreach ($items as $item) {
-                    list($min, $max) = ajaxGetRangeValue($item->itemid, $item->value_type, $databaseConnection, $table, $firstTick, $lastTick);
-                    $minCol->push($min);
-                    $maxCol->push($max);
+                    list($min, $max) = getRangeClock($item->itemid, $item->value_type, $databaseConnection, "history");
+
+                    $tableInfo = collect();
+                    if ($firstTick < $min && $lastTick < $min) {
+                        $tbl = [
+                            "table" => "trends",
+                            "from" => $firstTick,
+                            "to" => $lastTick
+                        ];
+                        $tableInfo->push($tbl);
+                    } else if ($firstTick < $min && $lastTick > $min) {
+                        $tableInfo->push([
+                                "table" => "trends",
+                                "from" => $firstTick,
+                                "to" => $min
+                            ]);
+                        $tableInfo->push([
+                                "table" => "history",
+                                "from" => $min,
+                                "to" => $lastTick
+                            ]);
+                    } else if ($firstTick > $min && $lastTick > $min) {
+                        $tbl = [
+                            "table" => "history",
+                            "from" => $firstTick,
+                            "to" => $lastTick
+                        ];
+                        $tableInfo->push($tbl);
+                    }
+
+                    foreach($tableInfo as $tbl) {
+                        list($min, $max) = getRangeValue($item->itemid, $item->value_type, $databaseConnection, $tbl["table"], $tbl["from"], $tbl["to"]);
+                        $minCol->push($min);
+                        $maxCol->push($max);
+                    }
                 }
             }
         }

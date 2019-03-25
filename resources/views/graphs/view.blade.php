@@ -113,6 +113,9 @@
 
         var requestId = {{$rq_graphid}};
         var itemInfos = {!!$itemInfos!!};
+        console.log("itemInfos origin: ", itemInfos);
+        console.log("itemInfos origin From: ", new Date(itemInfos[0].from*1000));
+        console.log("itemInfos origin to: ", new Date(itemInfos[0].to*1000));
         var itemIdsLength = itemInfos.length;
 
         if (requestId > 0) {
@@ -128,12 +131,17 @@
         }
 
         myPlot.on('plotly_relayout', function(data){
+            console.log("data 1: ", data);
             if (data["xaxis.range[0]"] != undefined) {
                 var from = getUnixTime(new Date(data["xaxis.range[0]"]).getTime());
                 var itemInfoGetData = getDataPrepend(from);
                 console.log("from: ", from);
                 console.log("itemInfos: ", itemInfos);
+                console.log("itemInfos From: ", new Date(itemInfos[0].from*1000));
+                console.log("itemInfos to: ", new Date(itemInfos[0].to*1000));
                 console.log('relayout itemInfoGetData: ', itemInfoGetData);
+                console.log("relayout itemInfoGetData From: ", new Date(itemInfoGetData[0].from*1000));
+                console.log("relayout itemInfoGetData to: ", new Date(itemInfoGetData[0].to*1000));
                 // console.log('itemInfos: ', itemInfos);
                 ajaxGetDataOnChart(connection, itemInfoGetData, "prepend");
             }
@@ -142,6 +150,7 @@
         myPlot.on('plotly_doubleclick',  () => false);
 
         function ajaxGetDataOnChart(connection, itemInfoGetData, getType) {
+            console.log("ajaxGetDataOnChart");
             $.ajax({
                 type: 'GET',
                 url: '/ajax/chart/item',
@@ -167,6 +176,7 @@
         }
 
         function ajaxGetYaxisRange(connection, graphId, xFirstTick = 0, xLastTick = 0) {
+            console.log("run: ajaxGetYaxisRange");
             if (xFirstTick == 0) {
                 xFirstTick = getUnixTime(new Date(myPlot.layout.xaxis.range[0]).getTime());
             };
@@ -198,14 +208,15 @@
         function updateScaleYaxis(res) {
             if (res.min == null || res.max == null) return;
             var update = {
-                'yaxis.range': [res.min, res.max*110/100],   // updates the xaxis range
+                'yaxis.range': [res.min * 100/120, res.max*120/100],
+                // 'yaxis.range': [0, 3000],   // updates the xaxis range
             };
             console.log("update range: ", update);
             Plotly.relayout(myPlot, update);
         }
 
         function setLegendPosition() {
-            $yAxisPosition = parseInt($('tspan').attr('y'),10) + 80;
+            $yAxisPosition = parseInt($('.xtick:first > text').attr('y'),10) + 100;
             if ({{$graphtype}} != 2) {
                 document.getElementsByClassName('legend')[0].setAttribute("transform", "translate(50," + ($yAxisPosition)  +")");
             }
